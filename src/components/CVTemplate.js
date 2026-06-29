@@ -124,29 +124,36 @@ export default function CVTemplate({ data }) {
         </tbody>
       </table>
 
-      {/* Certificates Section */}
+      {/* Certificates Section - 免許・資格・受験日 */}
       <h3 className="font-bold text-sm mb-2">免許・資格・受験日</h3>
       <table className="cv-table mb-4">
         <tbody>
+          {/* Custom sertifikat entries */}
           {data.sertifikat && data.sertifikat.length > 0 ? (
             data.sertifikat.map((s, idx) => (
               <tr key={idx}>
-                <td className="text-xs">{s.nama} - 受験日: {s.tanggal}</td>
+                <td className="text-xs py-1">{s.nama} - 受験日: {s.tanggal}</td>
               </tr>
             ))
           ) : (
             <>
-              {data.sertifikatBahasaJepang && (
-                <tr><td className="text-xs">国際交流基金日本語基礎テスト (JFT) - 受験日: {data.tanggalJFT || "-"}</td></tr>
+              {data.tanggalJFT && (
+                <tr><td className="text-xs py-1">国際交流基金日本語基礎テスト - 受験日: {data.tanggalJFT}</td></tr>
               )}
-              {data.sertifikatSSW && (
-                <tr><td className="text-xs">介護日本語評価試験結果通知書 - 受験日: {data.tanggalSSW || "-"}</td></tr>
+              {data.tanggalSSW && (
+                <tr><td className="text-xs py-1">介護日本語評価試験結果通知書 - 受験日: {data.tanggalSSW}</td></tr>
               )}
-              {data.bidangKerja === "KAIGO" && data.sertifikatSSW && (
-                <tr><td className="text-xs">介護日本語評価試験結果通知書 (Kaigo) - 受験日: {data.tanggalSSWKaigo || data.tanggalSSW || "-"}</td></tr>
+              {data.tanggalSSWKaigo && (
+                <tr><td className="text-xs py-1">介護日本語評価試験結果通知書 (Kaigo) - 受験日: {data.tanggalSSWKaigo}</td></tr>
               )}
-              {!data.sertifikatBahasaJepang && !data.sertifikatSSW && (
-                <tr><td className="text-xs text-gray-400">なし</td></tr>
+              {data.tanggalJLPT && (
+                <tr><td className="text-xs py-1">日本語能力試験 (JLPT) - 受験日: {data.tanggalJLPT}</td></tr>
+              )}
+              {data.tanggalShuryoShomei && (
+                <tr><td className="text-xs py-1">技能実習修了証明書 - 受験日: {data.tanggalShuryoShomei}</td></tr>
+              )}
+              {!data.tanggalJFT && !data.tanggalSSW && !data.tanggalSSWKaigo && !data.tanggalJLPT && !data.tanggalShuryoShomei && (
+                <tr><td className="text-xs py-1 text-gray-400">-</td></tr>
               )}
             </>
           )}
