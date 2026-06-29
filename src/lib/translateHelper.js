@@ -1,77 +1,45 @@
-// Auto translate Indonesian text to Japanese using basic mapping + free API
-// For common CV phrases and editable fields
+// Auto translate Indonesian text to Japanese via server-side API route
 
-const COMMON_TRANSLATIONS = {
-  // Kelebihan/Kekurangan common phrases
-  "bertanggung jawab": "責任感がある",
-  "tidak mudah menyerah": "諦めない",
-  "mudah beradaptasi": "適応力がある",
-  "bekerja dalam tim": "チームワーク",
-  "disiplin": "規律正しい",
-  "teliti": "丁寧",
-  "cepat belajar": "学習能力が高い",
-  "penyabar": "忍耐強い",
-  "ramah": "親切",
-  "ceria": "明るい",
-  "mudah lupa": "忘れっぽい",
-  "pemalu": "人見知り",
-  "gugup": "緊張しやすい",
-  // Pekerjaan
-  "petani": "農業",
-  "pedagang": "商人",
-  "ibu rumah tangga": "主婦",
-  "pelajar": "学生",
-  "karyawan": "会社員",
-  "wiraswasta": "自営業",
-  "guru": "教師",
-  "sopir": "運転手",
-  "buruh": "労働者",
-};
-
-// Use Google Translate API (free tier with API key)
-export async function translateToJapanese(text, apiKey) {
+export async function translateToJapanese(text) {
   if (!text || text.trim() === "") return "";
-  
-  // Check if already Japanese
-  if (/[\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf]/.test(text)) {
+
+  // Check if already mostly Japanese
+  const jpChars = (text.match(/[\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf]/g) || []).length;
+  if (jpChars > text.length * 0.5) {
     return text;
   }
 
   try {
-    const url = `https://translation.googleapis.com/language/translate/v2?key=${apiKey}`;
-    const res = await fetch(url, {
+    const res = await fetch("/api/translate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        q: text,
-        source: "id",
-        target: "ja",
-        format: "text",
-      }),
+      body: JSON.stringify({ text, source: "id", target: "ja" }),
     });
 
-    if (res.ok) {
-      const data = await res.json();
-      return data.data.translations[0].translatedText;
+    const data = await res.json();
+
+    if (data.translation) {
+      return data.translation;
+    }
+    if (data.error) {
+      console.warn("Translation error:", data.error);
+      return text; // Return original if failed
     }
   } catch (err) {
-    console.warn("Translation API failed, using fallback:", err.message);
+    console.warn("Translation fetch failed:", err.message);
   }
 
-  // Fallback: simple word replacement
-  let result = text.toLowerCase();
-  for (const [id, jp] of Object.entries(COMMON_TRANSLATIONS)) {
-    result = result.replace(new RegExp(id, "gi"), jp);
-  }
-  return result === text.toLowerCase() ? text : result;
+  return text;
 }
 
 // Batch translate multiple fields
-export async function batchTranslate(fields, apiKey) {
+export async function batchTranslate(fields) {
   const results = {};
   for (const [key, value] of Object.entries(fields)) {
     if (value && value.trim()) {
-      results[key] = await translateToJapanese(value, apiKey);
+      results[key] = await translateToJapanese(value);
+      // Small delay to avoid rate limiting
+      await new Promise((r) => setTimeout(r, 300));
     } else {
       results[key] = "";
     }

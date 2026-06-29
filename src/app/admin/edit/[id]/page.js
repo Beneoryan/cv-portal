@@ -7,8 +7,6 @@ import { doc, getDoc, updateDoc } from "firebase/firestore";
 import Navbar from "@/components/Navbar";
 import { translateToJapanese } from "@/lib/translateHelper";
 
-const API_KEY = "AIzaSyAWlNi_iBOWxZBD6E20aHOSrRpPsirDdOM";
-
 // Fields that should be translated to Japanese
 const TRANSLATABLE_FIELDS = [
   { key: "kelebihan", label: "Kelebihan" },
@@ -37,7 +35,8 @@ export default function EditCandidatePage() {
   const [saving, setSaving] = useState(false);
   const [translating, setTranslating] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [activeTab, setActiveTab] = useState("data"); // data | japanese
+  const [message, setMessage] = useState("");
+  const [activeTab, setActiveTab] = useState("data"); // data | certs | japanese
 
   useEffect(() => {
     if (!authLoading && (!user || userData?.role !== "admin")) {
@@ -78,7 +77,7 @@ export default function EditCandidatePage() {
     for (const field of TRANSLATABLE_FIELDS) {
       if (data[field.key] && data[field.key].trim()) {
         try {
-          const result = await translateToJapanese(data[field.key], API_KEY);
+          const result = await translateToJapanese(data[field.key]);
           newTranslations[field.key] = result;
         } catch (err) {
           console.error(`Translation error for ${field.key}:`, err);
@@ -133,6 +132,13 @@ export default function EditCandidatePage() {
 
         {saved && (
           <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-4 text-sm">Data berhasil disimpan!</div>
+        )}
+
+        {message && (
+          <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg mb-4 text-sm">
+            {message}
+            <button onClick={() => setMessage("")} className="float-right text-blue-400 hover:text-blue-600">x</button>
+          </div>
         )}
 
         {/* Tabs */}
@@ -199,6 +205,43 @@ export default function EditCandidatePage() {
               <h3 className="font-semibold text-gray-700 mb-4">Sertifikat & Tanggal Ujian (免許・資格・受験日)</h3>
               <p className="text-xs text-gray-500 mb-4">Isi tanggal ujian untuk setiap sertifikat yang dimiliki. Data ini akan muncul di CV.</p>
               
+              {/* Auto fetch from links */}
+              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-blue-700">Auto-detect dari Link Sertifikat</p>
+                    <p className="text-xs text-blue-500">Ambil nama file dari Google Drive untuk identifikasi sertifikat</p>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      const urls = [data.sertifikatBahasaJepang, data.sertifikatSSW, data.sertifikatSenmonkyuu, data.sertifikatSelesaiMagang].filter(Boolean);
+                      if (urls.length === 0) { setMessage("Tidak ada link sertifikat"); return; }
+                      try {
+                        const res = await fetch("/api/cert-info", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ urls }),
+                        });
+                        const result = await res.json();
+                        if (result.files && result.files.length > 0) {
+                          const certs = result.files.map((f) => ({
+                            nama: f.name.replace(/\.(pdf|jpg|jpeg|png)$/i, "").replace(/_/g, " "),
+                            tanggal: f.createdTime ? new Date(f.createdTime).toLocaleDateString("ja-JP", { year: "numeric", month: "2-digit", day: "2-digit" }).replace(/\//g, "年").replace(/年/, "年") + "日" : "",
+                          }));
+                          handleChange("sertifikat", certs);
+                          setMessage(`${certs.length} sertifikat terdeteksi dari link`);
+                        }
+                      } catch (err) {
+                        setMessage("Error: " + err.message);
+                      }
+                    }}
+                    className="bg-blue-600 text-white px-3 py-1.5 rounded text-xs hover:bg-blue-700"
+                  >
+                    Fetch dari Link
+                  </button>
+                </div>
+              </div>
+
               <div className="space-y-4">
                 {CERT_TEMPLATES.map((cert) => (
                   <div key={cert.field} className="flex items-center gap-4 p-3 border border-gray-200 rounded-lg">
