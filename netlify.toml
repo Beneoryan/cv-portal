@@ -1,0 +1,14 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NEXT_PUBLIC_FIREBASE_API_KEY = "AIzaSyDemo_placeholder"
+  NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN = "cv-portal-ijef.firebaseapp.com"
+  NEXT_PUBLIC_FIREBASE_PROJECT_ID = "cv-portal-ijef"
+  NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET = "cv-portal-ijef.appspot.com"
+  NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID = "000000000000"
+  NEXT_PUBLIC_FIREBASE_APP_ID = "1:000000000000:web:000000000000"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
