@@ -209,35 +209,35 @@ export default function CVTemplate({ data }) {
         </tbody>
       </table>
 
-      {/* Motivation Section */}
+      {/* Motivation Section - Use Japanese translation if available */}
       <h3 className="font-bold text-sm mb-2">志望理由・自己PR</h3>
       <table className="cv-table mb-4">
         <tbody>
           <tr>
             <td className="font-bold bg-gray-100 w-[180px] align-top">長所 (kelebihan)</td>
-            <td className="whitespace-pre-wrap text-xs">{data.kelebihan}</td>
+            <td className="whitespace-pre-wrap text-xs">{data.translations?.kelebihan || data.kelebihan}</td>
           </tr>
           <tr>
             <td className="font-bold bg-gray-100 align-top">短所 (kekurangan)</td>
-            <td className="whitespace-pre-wrap text-xs">{data.kekurangan}</td>
+            <td className="whitespace-pre-wrap text-xs">{data.translations?.kekurangan || data.kekurangan}</td>
           </tr>
           <tr>
             <td className="font-bold bg-gray-100 align-top">来日理由 (alasan ke Jepang)</td>
-            <td className="whitespace-pre-wrap text-xs">{data.alasanKeJepang}</td>
+            <td className="whitespace-pre-wrap text-xs">{data.translations?.alasanKeJepang || data.alasanKeJepang}</td>
           </tr>
           <tr>
             <td className="font-bold bg-gray-100 align-top">職業希望理由</td>
-            <td className="whitespace-pre-wrap text-xs">{data.alasanMelamarBidang}</td>
+            <td className="whitespace-pre-wrap text-xs">{data.translations?.alasanMelamarBidang || data.alasanMelamarBidang}</td>
           </tr>
-          {data.alasanKaigofukushishi && (
+          {(data.alasanKaigofukushishi || data.translations?.alasanKaigofukushishi) && (
             <tr>
               <td className="font-bold bg-gray-100 align-top">介護福祉士志望理由</td>
-              <td className="whitespace-pre-wrap text-xs">{data.alasanKaigofukushishi}</td>
+              <td className="whitespace-pre-wrap text-xs">{data.translations?.alasanKaigofukushishi || data.alasanKaigofukushishi}</td>
             </tr>
           )}
           <tr>
             <td className="font-bold bg-gray-100 align-top">将来の夢 (impian)</td>
-            <td className="whitespace-pre-wrap text-xs">{data.impianMasaDepan}</td>
+            <td className="whitespace-pre-wrap text-xs">{data.translations?.impianMasaDepan || data.impianMasaDepan}</td>
           </tr>
         </tbody>
       </table>

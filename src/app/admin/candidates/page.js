@@ -3,8 +3,9 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { db } from "@/lib/firebase";
-import { collection, getDocs, query, orderBy } from "firebase/firestore";
+import { collection, getDocs, query, orderBy, doc, deleteDoc } from "firebase/firestore";
 import Navbar from "@/components/Navbar";
+import DriveImage from "@/components/DriveImage";
 import Link from "next/link";
 
 export default function AdminCandidatesPage() {
@@ -14,6 +15,12 @@ export default function AdminCandidatesPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterBidang, setFilterBidang] = useState("");
+  const [filterKategori, setFilterKategori] = useState("");
+  const [selected, setSelected] = useState([]);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null); // single delete
+  const [confirmText, setConfirmText] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (!authLoading && (!user || userData?.role !== "admin")) {
@@ -27,9 +34,11 @@ export default function AdminCandidatesPage() {
 
   const loadCandidates = async () => {
     try {
-      const q = query(collection(db, "candidates"), orderBy("submittedAt", "desc"));
+      const q = query(collection(db, "candidates"));
       const snapshot = await getDocs(q);
-      const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      const data = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+      // Sort by submittedAt desc
+      data.sort((a, b) => (b.submittedAt || "").localeCompare(a.submittedAt || ""));
       setCandidates(data);
     } catch (err) {
       console.error("Error loading candidates:", err);
@@ -40,12 +49,77 @@ export default function AdminCandidatesPage() {
   const filtered = candidates.filter((c) => {
     const matchSearch = !searchTerm ||
       c.namaLengkap?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.kodeJob?.toLowerCase().includes(searchTerm.toLowerCase());
+      c.kodeJob?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.namaPanggilan?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchBidang = !filterBidang || c.bidangKerja === filterBidang;
-    return matchSearch && matchBidang;
+    const matchKategori = !filterKategori || c.kategoriKandidat === filterKategori;
+    return matchSearch && matchBidang && matchKategori;
   });
 
   const uniqueBidang = [...new Set(candidates.map((c) => c.bidangKerja).filter(Boolean))];
+  const uniqueKategori = [...new Set(candidates.map((c) => c.kategoriKandidat).filter(Boolean))];
+
+  // Selection handlers
+  const toggleSelect = (id) => {
+    setSelected((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
+  };
+  const selectAll = () => {
+    if (selected.length === filtered.length) {
+      setSelected([]);
+    } else {
+      setSelected(filtered.map((c) => c.id));
+    }
+  };
+
+  // Delete single
+  const handleDeleteSingle = (candidate) => {
+    setDeleteTarget(candidate);
+    setShowDeleteConfirm(true);
+    setConfirmText("");
+  };
+
+  // Delete selected (bulk)
+  const handleDeleteBulk = () => {
+    setDeleteTarget(null);
+    setShowDeleteConfirm(true);
+    setConfirmText("");
+  };
+
+  // Confirm delete
+  const confirmDelete = async () => {
+    if (confirmText !== "HAPUS") return;
+    setDeleting(true);
+
+    try {
+      if (deleteTarget) {
+        // Single delete
+        await deleteDoc(doc(db, "candidates", deleteTarget.id));
+        setCandidates((prev) => prev.filter((c) => c.id !== deleteTarget.id));
+      } else {
+        // Bulk delete
+        for (const id of selected) {
+          await deleteDoc(doc(db, "candidates", id));
+        }
+        setCandidates((prev) => prev.filter((c) => !selected.includes(c.id)));
+        setSelected([]);
+      }
+    } catch (err) {
+      alert("Error: " + err.message);
+    }
+
+    setDeleting(false);
+    setShowDeleteConfirm(false);
+    setDeleteTarget(null);
+    setConfirmText("");
+  };
+
+  // Reset all
+  const handleResetAll = () => {
+    setSelected(filtered.map((c) => c.id));
+    setDeleteTarget(null);
+    setShowDeleteConfirm(true);
+    setConfirmText("");
+  };
 
   if (authLoading || loading) {
     return (
@@ -64,31 +138,41 @@ export default function AdminCandidatesPage() {
             <h1 className="text-2xl font-bold text-gray-800">Data Kandidat</h1>
             <p className="text-gray-500 text-sm">{candidates.length} kandidat terdaftar</p>
           </div>
+          <div className="flex space-x-2">
+            {selected.length > 0 && (
+              <button onClick={handleDeleteBulk} className="bg-red-500 text-white px-3 py-2 rounded-lg text-sm hover:bg-red-600">
+                Hapus {selected.length} terpilih
+              </button>
+            )}
+            <button onClick={handleResetAll} className="bg-red-100 text-red-700 px-3 py-2 rounded-lg text-sm hover:bg-red-200">
+              Reset Semua
+            </button>
+          </div>
         </div>
 
         {/* Filters */}
         <div className="card mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
-              <label className="form-label">Cari Nama/Kode Job</label>
-              <input
-                className="input-field"
-                placeholder="Ketik nama atau kode..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+              <label className="form-label">Cari</label>
+              <input className="input-field" placeholder="Nama / Kode Job..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
             </div>
             <div>
-              <label className="form-label">Filter Bidang</label>
+              <label className="form-label">Kategori</label>
+              <select className="input-field" value={filterKategori} onChange={(e) => setFilterKategori(e.target.value)}>
+                <option value="">Semua</option>
+                {uniqueKategori.map((k) => <option key={k} value={k}>{k}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="form-label">Bidang</label>
               <select className="input-field" value={filterBidang} onChange={(e) => setFilterBidang(e.target.value)}>
-                <option value="">Semua Bidang</option>
-                {uniqueBidang.map((b) => (
-                  <option key={b} value={b}>{b}</option>
-                ))}
+                <option value="">Semua</option>
+                {uniqueBidang.map((b) => <option key={b} value={b}>{b}</option>)}
               </select>
             </div>
             <div className="flex items-end">
-              <span className="text-sm text-gray-500">{filtered.length} hasil ditemukan</span>
+              <span className="text-sm text-gray-500">{filtered.length} hasil</span>
             </div>
           </div>
         </div>
@@ -98,7 +182,10 @@ export default function AdminCandidatesPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-200">
-                <th className="text-left py-3 px-2 font-medium text-gray-600">No</th>
+                <th className="py-3 px-2">
+                  <input type="checkbox" checked={selected.length === filtered.length && filtered.length > 0} onChange={selectAll} className="rounded" />
+                </th>
+                <th className="text-left py-3 px-2 font-medium text-gray-600">Foto</th>
                 <th className="text-left py-3 px-2 font-medium text-gray-600">Nama Lengkap</th>
                 <th className="text-left py-3 px-2 font-medium text-gray-600">Bidang</th>
                 <th className="text-left py-3 px-2 font-medium text-gray-600">Kategori</th>
@@ -108,37 +195,88 @@ export default function AdminCandidatesPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((c, idx) => (
-                <tr key={c.id} className="border-b border-gray-100 hover:bg-gray-50">
-                  <td className="py-3 px-2 text-gray-500">{idx + 1}</td>
-                  <td className="py-3 px-2 font-medium text-gray-800">{c.namaLengkap}</td>
+              {filtered.map((c) => (
+                <tr key={c.id} className={`border-b border-gray-100 hover:bg-gray-50 ${selected.includes(c.id) ? "bg-blue-50" : ""}`}>
+                  <td className="py-3 px-2">
+                    <input type="checkbox" checked={selected.includes(c.id)} onChange={() => toggleSelect(c.id)} className="rounded" />
+                  </td>
+                  <td className="py-3 px-2">
+                    <DriveImage url={c.pasPhoto || c.sertifikatBahasaJepang} alt={c.namaLengkap} />
+                  </td>
+                  <td className="py-3 px-2">
+                    <div className="font-medium text-gray-800">{c.namaLengkap}</div>
+                    <div className="text-xs text-gray-400">{c.namaPanggilan}</div>
+                  </td>
                   <td className="py-3 px-2">
                     <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs">{c.bidangKerja}</span>
                   </td>
-                  <td className="py-3 px-2 text-gray-600">{c.kategoriKandidat}</td>
-                  <td className="py-3 px-2 text-gray-600">{c.kodeJob}</td>
-                  <td className="py-3 px-2 text-gray-600">{c.noHp}</td>
                   <td className="py-3 px-2">
-                    <Link
-                      href={`/admin/cv/${c.id}`}
-                      className="text-blue-600 hover:text-blue-800 text-xs font-medium"
-                    >
-                      Lihat CV
-                    </Link>
+                    <span className={`px-2 py-0.5 rounded text-xs ${
+                      c.kategoriKandidat === "NEW COMER" ? "bg-green-100 text-green-700" :
+                      c.kategoriKandidat === "EX-MAGANG/EX-TRAINEER" ? "bg-purple-100 text-purple-700" :
+                      "bg-orange-100 text-orange-700"
+                    }`}>{c.kategoriKandidat}</span>
+                  </td>
+                  <td className="py-3 px-2 text-gray-600">{c.kodeJob}</td>
+                  <td className="py-3 px-2 text-gray-600 text-xs">{c.noHp}</td>
+                  <td className="py-3 px-2">
+                    <div className="flex space-x-2">
+                      <Link href={`/admin/cv/${c.id}`} className="text-blue-600 hover:text-blue-800 text-xs font-medium">
+                        CV
+                      </Link>
+                      <Link href={`/admin/edit/${c.id}`} className="text-green-600 hover:text-green-800 text-xs font-medium">
+                        Edit
+                      </Link>
+                      <button onClick={() => handleDeleteSingle(c)} className="text-red-500 hover:text-red-700 text-xs font-medium">
+                        Hapus
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
               {filtered.length === 0 && (
-                <tr>
-                  <td colSpan="7" className="py-8 text-center text-gray-400">
-                    Tidak ada data kandidat
-                  </td>
-                </tr>
+                <tr><td colSpan="8" className="py-8 text-center text-gray-400">Tidak ada data</td></tr>
               )}
             </tbody>
           </table>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <h3 className="text-lg font-bold text-red-600 mb-2">Konfirmasi Hapus</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              {deleteTarget
+                ? `Apakah Anda yakin ingin menghapus data "${deleteTarget.namaLengkap}"?`
+                : `Apakah Anda yakin ingin menghapus ${selected.length} data kandidat?`
+              }
+            </p>
+            <p className="text-sm text-gray-500 mb-3">
+              Ketik <strong className="text-red-600">HAPUS</strong> untuk konfirmasi:
+            </p>
+            <input
+              className="input-field mb-4"
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              placeholder="Ketik HAPUS"
+            />
+            <div className="flex space-x-3 justify-end">
+              <button onClick={() => { setShowDeleteConfirm(false); setConfirmText(""); }} className="btn-secondary">
+                Batal
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={confirmText !== "HAPUS" || deleting}
+                className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {deleting ? "Menghapus..." : "Hapus Permanen"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

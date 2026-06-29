@@ -94,6 +94,7 @@ function parseRow(headers, values) {
     cvRirekisho: get("CV/RIREKISHO"),
     sertifikatSenmonkyuu: get("SERTIFIKAT SENMONKYUU"),
     sertifikatSelesaiMagang: get("SERTIFIKAT SELESAI MAGANG"),
+    pasPhoto: get("PAS PHOTO 3X4") || get("PAS PHOTO"),
     importedAt: new Date().toISOString(),
     submittedAt: get("Timestamp") || new Date().toISOString(),
   };
