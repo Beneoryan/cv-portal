@@ -128,34 +128,33 @@ export default function CVTemplate({ data }) {
       <h3 className="font-bold text-sm mb-2">免許・資格・受験日</h3>
       <table className="cv-table mb-4">
         <tbody>
-          {/* Custom sertifikat entries */}
-          {data.sertifikat && data.sertifikat.length > 0 ? (
-            data.sertifikat.map((s, idx) => (
-              <tr key={idx}>
+          {/* Always show individual date fields as primary entries */}
+          {data.tanggalJFT && (
+            <tr><td className="text-xs py-1">国際交流基金日本語基礎テスト - 受験日: {data.tanggalJFT}</td></tr>
+          )}
+          {data.tanggalSSW && (
+            <tr><td className="text-xs py-1">介護日本語評価試験結果通知書 - 受験日: {data.tanggalSSW}</td></tr>
+          )}
+          {data.tanggalSSWKaigo && (
+            <tr><td className="text-xs py-1">介護日本語評価試験結果通知書 (Kaigo) - 受験日: {data.tanggalSSWKaigo}</td></tr>
+          )}
+          {data.tanggalJLPT && (
+            <tr><td className="text-xs py-1">日本語能力試験 (JLPT) - 受験日: {data.tanggalJLPT}</td></tr>
+          )}
+          {data.tanggalShuryoShomei && (
+            <tr><td className="text-xs py-1">技能実習修了証明書 - 受験日: {data.tanggalShuryoShomei}</td></tr>
+          )}
+          {/* Show custom sertifikat entries as additional rows */}
+          {data.sertifikat && data.sertifikat.length > 0 && data.sertifikat.map((s, idx) => (
+            s.nama && s.tanggal ? (
+              <tr key={`sert-${idx}`}>
                 <td className="text-xs py-1">{s.nama} - 受験日: {s.tanggal}</td>
               </tr>
-            ))
-          ) : (
-            <>
-              {data.tanggalJFT && (
-                <tr><td className="text-xs py-1">国際交流基金日本語基礎テスト - 受験日: {data.tanggalJFT}</td></tr>
-              )}
-              {data.tanggalSSW && (
-                <tr><td className="text-xs py-1">介護日本語評価試験結果通知書 - 受験日: {data.tanggalSSW}</td></tr>
-              )}
-              {data.tanggalSSWKaigo && (
-                <tr><td className="text-xs py-1">介護日本語評価試験結果通知書 (Kaigo) - 受験日: {data.tanggalSSWKaigo}</td></tr>
-              )}
-              {data.tanggalJLPT && (
-                <tr><td className="text-xs py-1">日本語能力試験 (JLPT) - 受験日: {data.tanggalJLPT}</td></tr>
-              )}
-              {data.tanggalShuryoShomei && (
-                <tr><td className="text-xs py-1">技能実習修了証明書 - 受験日: {data.tanggalShuryoShomei}</td></tr>
-              )}
-              {!data.tanggalJFT && !data.tanggalSSW && !data.tanggalSSWKaigo && !data.tanggalJLPT && !data.tanggalShuryoShomei && (
-                <tr><td className="text-xs py-1 text-gray-400">-</td></tr>
-              )}
-            </>
+            ) : null
+          ))}
+          {/* Show placeholder if nothing is available */}
+          {!data.tanggalJFT && !data.tanggalSSW && !data.tanggalSSWKaigo && !data.tanggalJLPT && !data.tanggalShuryoShomei && !(data.sertifikat && data.sertifikat.some(s => s.nama && s.tanggal)) && (
+            <tr><td className="text-xs py-1 text-gray-400">-</td></tr>
           )}
         </tbody>
       </table>

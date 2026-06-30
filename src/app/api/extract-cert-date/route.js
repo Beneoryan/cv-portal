@@ -120,7 +120,7 @@ export async function POST(request) {
 
     if (!pdfText || pdfText.trim().length === 0) {
       return NextResponse.json(
-        { success: false, error: "PDF tidak mengandung teks yang dapat diekstrak" },
+        { success: false, error: "PDF berupa gambar/scan, tanggal tidak dapat diekstrak otomatis. Silakan isi manual." },
         { status: 422 }
       );
     }
