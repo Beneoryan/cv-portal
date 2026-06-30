@@ -2,7 +2,7 @@
   "id": "FEAT-004",
   "type": "fix",
   "description": "Fix kategori kandidat import: add more keyword alternatives to detect Form Responses 1 column E header (e.g. 'ANDA ADALAH KANDIDAT'), and add fallback row-value scan for kategori detection",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "In getFieldDefinitions(), expand the 'Kategori Kandidat' keywords array with: 'anda adalah kandidat', 'anda termasuk kandidat', 'pilih kategori', 'jenis kandidat', 'status kandidat', 'candidate type', 'kategori peserta', 'tipe kandidat'",
     "In the parseRow() function's kategoriKandidat get() call, add the same additional keyword alternatives: 'ANDA ADALAH KANDIDAT', 'ANDA TERMASUK KANDIDAT', 'PILIH KATEGORI', 'JENIS KANDIDAT', 'STATUS KANDIDAT', 'CANDIDATE TYPE', 'KATEGORI PESERTA', 'TIPE KANDIDAT'",
@@ -19,5 +19,5 @@
     "Run 'npm run build' in /projects/sandbox/cv-portal and confirm it succeeds with exit code 0"
   ],
   "blocked_reason": null,
-  "findings": null
+  "findings": "Build passes successfully. Added 8 new keyword alternatives ('anda adalah kandidat', 'anda termasuk kandidat', 'pilih kategori', 'jenis kandidat', 'status kandidat', 'candidate type', 'kategori peserta', 'tipe kandidat') to both getFieldDefinitions() and the get() call in parseRow(). Also added an IIFE fallback that scans all row values using regex /new\\s*comer|ex[\\s-]*magang|magang|engineering|gijinkoku/i to detect kategori data when header matching fails completely. The normalizeKategori() function then maps the found value to one of the three valid categories."
 }
