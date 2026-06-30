@@ -158,7 +158,7 @@ function parseMultilineEducation(text) {
       if (upper.includes(kw)) return "smp";
     }
     for (const kw of SD_KEYWORDS) {
-      if (upper.includes(kw)) return "sd";
+      if (/\bSD[\s\d]/.test(upper) || /\bSD$/.test(upper)) return "sd";
     }
     return null;
   }
@@ -168,16 +168,16 @@ function parseMultilineEducation(text) {
     // Remove leading "- " prefix
     const cleanLine = line.replace(/^-\s*/, "").trim();
     if (!cleanLine) continue;
-    // Split by " - " separator
-    const parts = cleanLine.split(/\s*-\s*/);
+    // Split by " - " (literal space-dash-space) separator to avoid splitting embedded hyphens in names
+    const parts = cleanLine.split(" - ");
     if (parts.length >= 2) {
       // Format: masuk - nama_sekolah - lulus OR nama_sekolah - masuk - lulus
       // Try to detect: if first part looks like a date (MM/YYYY or YYYY), treat as masuk - nama - lulus
-      const firstIsDate = /^\d{2}\/\d{4}$/.test(parts[0]) || /^\d{4}$/.test(parts[0]);
+      const firstIsDate = /^\d{2}\/\d{4}$/.test(parts[0].trim()) || /^\d{4}$/.test(parts[0].trim());
       if (firstIsDate && parts.length >= 2) {
         const masuk = parts[0].trim();
         // Rejoin middle parts as nama (in case nama contains " - " internally)
-        const lulus = parts.length >= 3 && (/^\d{2}\/\d{4}$/.test(parts[parts.length - 1]) || /^\d{4}$/.test(parts[parts.length - 1]))
+        const lulus = parts.length >= 3 && (/^\d{2}\/\d{4}$/.test(parts[parts.length - 1].trim()) || /^\d{4}$/.test(parts[parts.length - 1].trim()))
           ? parts[parts.length - 1].trim()
           : "";
         const namaEnd = lulus ? parts.length - 1 : parts.length;
@@ -258,8 +258,8 @@ function parseMultilineFamily(text) {
     if (!cleanLine) continue;
     // Remove trailing "..." (truncated text)
     const trimmedLine = cleanLine.replace(/\.{2,}$/, "").trim();
-    // Split by " - " separator
-    const parts = trimmedLine.split(/\s*-\s*/);
+    // Split by " - " (literal space-dash-space) separator to avoid splitting embedded hyphens in names
+    const parts = trimmedLine.split(" - ");
     if (parts.length === 0) continue;
 
     const entry = { nama: "", hubungan: "", usia: "", pekerjaan: "", gaji: "", tinggalBersama: "" };
@@ -356,8 +356,8 @@ function parseMultilineWork(text) {
     if (!cleanLine) continue;
     // Remove trailing "..." (truncated text)
     const trimmedLine = cleanLine.replace(/\.{2,}$/, "").trim();
-    // Split by " - " separator
-    const parts = trimmedLine.split(/\s*-\s*/);
+    // Split by " - " (literal space-dash-space) separator to avoid splitting embedded hyphens in names
+    const parts = trimmedLine.split(" - ");
     if (parts.length === 0) continue;
 
     const entry = { perusahaan: "", masuk: "", keluar: "", bidang: "", status: "", uraian: "" };
@@ -533,15 +533,15 @@ function parseRow(headers, values) {
   };
 
   // Post-processing: auto-detect and parse multi-line combined cells
-  // 1. Education: if individual fields are empty, try combined column
-  if (!result.sdNama && !result.smpNama && !result.smaNama) {
+  // 1. Education: if any individual education fields are empty, try combined column
+  if (!result.sdNama || !result.smpNama || !result.smaNama || !result.univNama) {
     const combinedEdu = get(
       "RIWAYAT PENDIDIKAN (SD-Pendidikan terakhir)",
       "RIWAYAT PENDIDIKAN (SD-PENDIDIKAN TERAKHIR)",
       "RIWAYAT PENDIDIKAN",
       "PENDIDIKAN (SD-Pendidikan terakhir)"
     );
-    if (combinedEdu && combinedEdu.includes("\n")) {
+    if (combinedEdu) {
       const eduParsed = parseMultilineEducation(combinedEdu);
       if (eduParsed.sdNama && !result.sdNama) result.sdNama = eduParsed.sdNama;
       if (eduParsed.sdMasuk && !result.sdMasuk) result.sdMasuk = eduParsed.sdMasuk;
@@ -569,7 +569,7 @@ function parseRow(headers, values) {
       "KELUARGA ANDA",
       "DATA KELUARGA"
     );
-    if (combinedFamily && combinedFamily.includes("\n")) {
+    if (combinedFamily) {
       const familyParsed = parseMultilineFamily(combinedFamily);
       for (let i = 0; i < familyParsed.length && i < 4; i++) {
         if (!result.keluarga[i].nama) {
@@ -591,7 +591,7 @@ function parseRow(headers, values) {
       "RIWAYAT PEKERJAAN",
       "RIWAYAT BEKERJA (TERBARU)"
     );
-    if (combinedWork && combinedWork.includes("\n")) {
+    if (combinedWork) {
       const workParsed = parseMultilineWork(combinedWork);
       for (let i = 0; i < workParsed.length && i < 4; i++) {
         if (!result.pekerjaan[i].perusahaan) {
