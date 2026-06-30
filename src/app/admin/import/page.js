@@ -252,6 +252,33 @@ function parseMultilineEducation(text) {
   return result;
 }
 
+// Check if a value looks like combined/stacked data (multiple entries in one cell)
+function looksLikeCombinedData(text) {
+  if (!text || typeof text !== "string") return false;
+  // Contains newlines = definitely combined
+  if (text.includes("\n")) return true;
+  // Contains multiple " - " separators (e.g., "FAROJI - 45 THN - Karyawan Pabrik - Rp 3.5 JT")
+  const dashCount = (text.match(/\s-\s/g) || []).length;
+  if (dashCount >= 2) return true;
+  return false;
+}
+
+// Check if a line looks like valid family data (has name-like content with separators)
+function isFamilyDataLine(line) {
+  if (!line || typeof line !== "string") return false;
+  const trimmed = line.trim();
+  // Empty or just a dash
+  if (!trimmed || trimmed === "-") return false;
+  // Starts with "- " prefix (typical family list format)
+  if (/^-\s+/.test(trimmed)) return true;
+  // Contains at least one " - " separator (name - age - job pattern)
+  if (trimmed.includes(" - ")) return true;
+  // Short single word/name (could be just a name entry)
+  if (trimmed.split(/\s+/).length <= 4 && !trimmed.includes("?") && trimmed.length <= 50) return true;
+  // If line is long and has no separators, it's likely random text (e.g., "Saya tertarik dengan...")
+  return false;
+}
+
 // Parse multi-line family text into array of family members
 // Each line format: "nama - usia - pekerjaan - gaji" or "nama - hubungan - usia - pekerjaan - gaji"
 // Lines may be prefixed with "- "
@@ -262,6 +289,8 @@ function parseMultilineFamily(text) {
 
   for (const line of lines) {
     if (result.length >= 4) break;
+    // Filter out non-family data lines (random text like "Saya tertarik dengan...")
+    if (!isFamilyDataLine(line)) continue;
     // Remove leading "- " prefix
     const cleanLine = line.replace(/^-\s*/, "").trim();
     if (!cleanLine) continue;
@@ -569,11 +598,16 @@ function parseRow(headers, values) {
     }
   }
 
-  // 2. Family: if first family member is empty OR contains raw multi-line data (substring collision), parse combined column
-  const familyNeedsParsing = !result.keluarga[0].nama || result.keluarga[0].nama.includes("\n");
+  // 2. Family: if first family member is empty OR contains raw multi-line/combined data (substring collision), parse combined column
+  const familyHasCombinedData = result.keluarga[0].nama && looksLikeCombinedData(result.keluarga[0].nama);
+  // If all data went to first slot: keluarga[0].nama has content, keluarga[1] is empty,
+  // and the content looks suspiciously long or has separator patterns
+  const familyAllInFirstSlot = result.keluarga[0].nama && !result.keluarga[1].nama 
+    && (result.keluarga[0].nama.length > 30 || (result.keluarga[0].nama.includes(" - ") && result.keluarga[0].nama.length > 15));
+  const familyNeedsParsing = !result.keluarga[0].nama || familyHasCombinedData || familyAllInFirstSlot;
   if (familyNeedsParsing) {
-    // If keluarga[0].nama itself contains newlines, it was matched from the combined column via substring collision
-    let combinedFamily = (result.keluarga[0].nama && result.keluarga[0].nama.includes("\n"))
+    // If keluarga[0].nama itself contains combined data, it was matched from the combined column via substring collision
+    let combinedFamily = familyHasCombinedData
       ? result.keluarga[0].nama
       : get(
           "DAFTAR KELUARGA 1 : ISI NAMA LENGKAP KELUARGA ANDA",
@@ -582,54 +616,113 @@ function parseRow(headers, values) {
           "KELUARGA ANDA",
           "DATA KELUARGA"
         );
-    if (combinedFamily) {
+    if (combinedFamily && looksLikeCombinedData(combinedFamily)) {
       const familyParsed = parseMultilineFamily(combinedFamily);
-      // Reset keluarga array slots and fill from parsed data
-      for (let i = 0; i < 4; i++) {
-        if (familyParsed[i]) {
-          result.keluarga[i] = {
-            nama: familyParsed[i].nama || "",
-            hubungan: familyParsed[i].hubungan || "",
-            usia: familyParsed[i].usia || "",
-            pekerjaan: familyParsed[i].pekerjaan || "",
-            gaji: familyParsed[i].gaji || "",
-            tinggalBersama: familyParsed[i].tinggalBersama || ""
-          };
-        } else if (familyNeedsParsing && result.keluarga[0].nama && result.keluarga[0].nama.includes("\n")) {
-          // Clear remaining slots if we were fixing a collision (raw data was in slot 0)
-          result.keluarga[i] = { nama: "", hubungan: "", usia: "", pekerjaan: "", gaji: "", tinggalBersama: "" };
+      if (familyParsed.length > 0) {
+        // Reset keluarga array slots and fill from parsed data
+        for (let i = 0; i < 4; i++) {
+          if (familyParsed[i]) {
+            result.keluarga[i] = {
+              nama: familyParsed[i].nama || "",
+              hubungan: familyParsed[i].hubungan || "",
+              usia: familyParsed[i].usia || "",
+              pekerjaan: familyParsed[i].pekerjaan || "",
+              gaji: familyParsed[i].gaji || "",
+              tinggalBersama: familyParsed[i].tinggalBersama || ""
+            };
+          } else {
+            // Clear remaining slots since we're reparsing from combined data
+            result.keluarga[i] = { nama: "", hubungan: "", usia: "", pekerjaan: "", gaji: "", tinggalBersama: "" };
+          }
         }
       }
     }
   }
 
-  // 3. Work: if first work entry is empty OR contains raw multi-line data (substring collision), parse combined column
-  const workNeedsParsing = !result.pekerjaan[0].perusahaan || result.pekerjaan[0].perusahaan.includes("\n");
+  // 3. Work: if first work entry is empty OR contains raw multi-line/combined data (substring collision), parse combined column
+  const workHasCombinedData = result.pekerjaan[0].perusahaan && looksLikeCombinedData(result.pekerjaan[0].perusahaan);
+  const workAllInFirstSlot = result.pekerjaan[0].perusahaan && !result.pekerjaan[1].perusahaan
+    && (result.pekerjaan[0].perusahaan.length > 30 || (result.pekerjaan[0].perusahaan.includes(" - ") && result.pekerjaan[0].perusahaan.length > 15));
+  const workNeedsParsing = !result.pekerjaan[0].perusahaan || workHasCombinedData || workAllInFirstSlot;
   if (workNeedsParsing) {
-    // If perusahaan itself contains newlines, it was matched from the combined column via substring collision
-    let combinedWork = (result.pekerjaan[0].perusahaan && result.pekerjaan[0].perusahaan.includes("\n"))
+    // If perusahaan itself contains combined data, it was matched from the combined column via substring collision
+    let combinedWork = workHasCombinedData
       ? result.pekerjaan[0].perusahaan
       : get(
           "RIWAYAT BEKERJA",
           "RIWAYAT PEKERJAAN",
           "RIWAYAT BEKERJA (TERBARU)"
         );
-    if (combinedWork) {
+    if (combinedWork && looksLikeCombinedData(combinedWork)) {
       const workParsed = parseMultilineWork(combinedWork);
-      for (let i = 0; i < 4; i++) {
-        if (workParsed[i]) {
-          result.pekerjaan[i] = {
-            perusahaan: workParsed[i].perusahaan || "",
-            masuk: workParsed[i].masuk || "",
-            keluar: workParsed[i].keluar || "",
-            bidang: workParsed[i].bidang || "",
-            status: workParsed[i].status || "",
-            uraian: workParsed[i].uraian || ""
-          };
-        } else if (workNeedsParsing && result.pekerjaan[0].perusahaan && result.pekerjaan[0].perusahaan.includes("\n")) {
-          // Clear remaining slots if we were fixing a collision
-          result.pekerjaan[i] = { perusahaan: "", masuk: "", keluar: "", bidang: "", status: "", uraian: "" };
+      if (workParsed.length > 0) {
+        for (let i = 0; i < 4; i++) {
+          if (workParsed[i]) {
+            result.pekerjaan[i] = {
+              perusahaan: workParsed[i].perusahaan || "",
+              masuk: workParsed[i].masuk || "",
+              keluar: workParsed[i].keluar || "",
+              bidang: workParsed[i].bidang || "",
+              status: workParsed[i].status || "",
+              uraian: workParsed[i].uraian || ""
+            };
+          } else {
+            // Clear remaining slots since we're reparsing from combined data
+            result.pekerjaan[i] = { perusahaan: "", masuk: "", keluar: "", bidang: "", status: "", uraian: "" };
+          }
         }
+      }
+    }
+  }
+
+  // 4. Emergency contact: if nomorDarurat contains combined data (multiple contacts stacked), parse it
+  // Format could be: "nama - no hp - hubungan\nnama2 - no hp2 - hubungan2" or all in one field
+  if (result.nomorDarurat && looksLikeCombinedData(result.nomorDarurat)) {
+    // Combined emergency data in nomorDarurat field - try to extract structured info
+    const lines = result.nomorDarurat.split(/\n/).map((l) => l.trim()).filter((l) => l && l !== "-");
+    if (lines.length > 0) {
+      const firstLine = lines[0].replace(/^-\s*/, "").trim();
+      const parts = firstLine.split(" - ");
+      if (parts.length >= 2) {
+        // Try to identify which part is phone, name, relationship
+        let phone = "", name = "", hubungan = "";
+        for (const part of parts) {
+          const p = part.trim();
+          if (/^[\d\s+\-()]{8,}$/.test(p) || /^0\d+/.test(p) || /^\+?\d{10,}/.test(p)) {
+            phone = p;
+          } else if (!name) {
+            name = p;
+          } else {
+            hubungan = p;
+          }
+        }
+        if (phone) result.nomorDarurat = phone;
+        if (name && !result.namaPemilikDarurat) result.namaPemilikDarurat = name;
+        if (hubungan && !result.hubunganDarurat) result.hubunganDarurat = hubungan;
+      }
+    }
+  }
+  // Also check if namaPemilikDarurat has combined data
+  if (result.namaPemilikDarurat && looksLikeCombinedData(result.namaPemilikDarurat)) {
+    const lines = result.namaPemilikDarurat.split(/\n/).map((l) => l.trim()).filter((l) => l && l !== "-");
+    if (lines.length > 0) {
+      const firstLine = lines[0].replace(/^-\s*/, "").trim();
+      const parts = firstLine.split(" - ");
+      if (parts.length >= 2) {
+        let phone = "", name = "", hubungan = "";
+        for (const part of parts) {
+          const p = part.trim();
+          if (/^[\d\s+\-()]{8,}$/.test(p) || /^0\d+/.test(p) || /^\+?\d{10,}/.test(p)) {
+            phone = p;
+          } else if (!name) {
+            name = p;
+          } else {
+            hubungan = p;
+          }
+        }
+        if (name) result.namaPemilikDarurat = name;
+        if (phone && !result.nomorDarurat) result.nomorDarurat = phone;
+        if (hubungan && !result.hubunganDarurat) result.hubunganDarurat = hubungan;
       }
     }
   }

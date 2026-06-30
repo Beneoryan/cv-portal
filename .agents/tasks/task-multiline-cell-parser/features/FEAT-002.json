@@ -1,0 +1,25 @@
+{
+  "id": "FEAT-002",
+  "type": "fix",
+  "description": "Fix family data detection and parsing: improve combined data detection to catch ' - ' separator patterns and empty sibling slots, filter non-family lines, and handle other combined columns like emergency contacts.",
+  "status": "in_progress",
+  "steps": [
+    "Improve familyNeedsParsing detection: also detect if keluarga[0].nama contains ' - ' pattern (indicating combined data with separators), and if keluarga[1].nama is empty while keluarga[0].nama has substantial content (all data went to first slot)",
+    "In parseMultilineFamily(), add filtering to skip lines that don't match family data pattern (e.g., lines like 'Saya tertarik dengan...' that don't start with '- ' AND don't contain at least one ' - ' separator)",
+    "Update the collision detection in post-processing to use the same enhanced heuristic for determining if combined family data source should be used",
+    "Check for and handle other combined columns that might need splitting (emergency contact data stacked in one cell)",
+    "Ensure after the fix, work and family post-processing correctly resets and fills slots from parsed data even without newline detection"
+  ],
+  "acceptance_criteria": [
+    "familyNeedsParsing triggers when keluarga[0].nama contains ' - ' separator pattern even without newlines",
+    "familyNeedsParsing triggers when keluarga[0].nama has content but keluarga[1].nama is empty (indicating all data went to first slot)",
+    "parseMultilineFamily filters out non-family lines that don't match expected patterns",
+    "Emergency contact combined data is detected and parsed when stacked in one cell",
+    "npm run build succeeds without errors"
+  ],
+  "verification": [
+    "Run 'npm run build' in /projects/sandbox/cv-portal and confirm it succeeds with exit code 0"
+  ],
+  "blocked_reason": null,
+  "findings": null
+}
