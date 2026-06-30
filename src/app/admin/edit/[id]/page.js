@@ -230,19 +230,30 @@ export default function EditCandidatePage() {
                   <label className="form-label">Alamat</label>
                   <textarea className="input-field" value={data.alamatLengkap || ""} onChange={(e) => handleChange("alamatLengkap", e.target.value)} />
                 </div>
+                <div>
+                  <label className="form-label">Memiliki SIM</label>
+                  <input className="input-field" value={data.memilikiSim || ""} onChange={(e) => handleChange("memilikiSim", e.target.value)} />
+                </div>
+                <div>
+                  <label className="form-label">Jenis SIM</label>
+                  <input className="input-field" value={data.jenisSim || ""} onChange={(e) => handleChange("jenisSim", e.target.value)} />
+                </div>
+                <div>
+                  <label className="form-label">Nomor SIM</label>
+                  <input className="input-field" value={data.nomorSim || ""} onChange={(e) => handleChange("nomorSim", e.target.value)} />
+                </div>
               </div>
             </div>
 
-            {/* Paspor & SIM */}
+            {/* Paspor */}
             <div className="card">
-              <h3 className="font-semibold text-gray-700 mb-3">Paspor & SIM</h3>
+              <h3 className="font-semibold text-gray-700 mb-3">Paspor & Pengalaman Jepang</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {[
                   { key: "pernahKeJepang", label: "Pernah ke Jepang" },
                   { key: "memilikiPaspor", label: "Memiliki Paspor" },
                   { key: "nomorPaspor", label: "Nomor Paspor" },
                   { key: "masaBerlakuPaspor", label: "Masa Berlaku Paspor" },
-                  { key: "memilikiSim", label: "Memiliki SIM" },
                 ].map((f) => (
                   <div key={f.key}>
                     <label className="form-label">{f.label}</label>
