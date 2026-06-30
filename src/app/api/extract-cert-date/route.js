@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { google } from "googleapis";
 
 // Extract Google Drive file ID from various URL formats
 function extractFileId(url) {
@@ -26,7 +25,28 @@ function toJapaneseDate(dateStr) {
 }
 
 // Find dates in text and return the last one in Japanese format
+// Also checks for Japanese date patterns (YYYY年MM月DD日) directly in OCR text
 function findDatesInText(text) {
+  // First, try to find Japanese date patterns directly (YYYY年MM月DD日)
+  const japaneseDatePattern = /(\d{4})年(\d{1,2})月(\d{1,2})日/g;
+  const japaneseDates = [...text.matchAll(japaneseDatePattern)];
+
+  if (japaneseDates.length > 0) {
+    // Take the LAST Japanese date found
+    const lastMatch = japaneseDates[japaneseDates.length - 1];
+    const year = lastMatch[1];
+    const month = lastMatch[2].padStart(2, "0");
+    const day = lastMatch[3].padStart(2, "0");
+    const japaneseDate = `${year}年${month}月${day}日`;
+
+    return {
+      date: japaneseDate,
+      rawDate: `${year}/${month}/${day}`,
+      totalDatesFound: japaneseDates.length,
+    };
+  }
+
+  // Then try standard date patterns (YYYY/MM/DD or YYYY-MM-DD)
   const datePattern = /\d{4}[\/\-]\d{2}[\/\-]\d{2}/g;
   const allDates = text.match(datePattern);
 
@@ -45,72 +65,62 @@ function findDatesInText(text) {
   };
 }
 
-// Perform OCR using Google Drive API (copy as Google Doc, export as text)
-async function performOcrWithGoogleDrive(fileId) {
-  if (!process.env.GOOGLE_SERVICE_ACCOUNT_JSON) {
+// Perform OCR using OCR.space API (free tier: 25,000 requests/month)
+async function performOcrWithOcrSpace(fileId) {
+  if (!process.env.OCR_SPACE_API_KEY) {
     return {
       error:
-        "GOOGLE_SERVICE_ACCOUNT_JSON belum dikonfigurasi. Silakan set environment variable dengan credential Google Service Account untuk mengaktifkan OCR pada PDF gambar/scan.",
+        "OCR_SPACE_API_KEY belum dikonfigurasi. Dapatkan API key gratis di https://ocr.space/ocrapi/freekey lalu set sebagai environment variable.",
     };
   }
 
-  let credentials;
-  try {
-    credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
-  } catch (parseErr) {
-    return {
-      error:
-        "GOOGLE_SERVICE_ACCOUNT_JSON tidak valid (bukan JSON). Periksa konfigurasi environment variable.",
-    };
-  }
-
-  const auth = new google.auth.GoogleAuth({
-    credentials,
-    scopes: ["https://www.googleapis.com/auth/drive"],
-  });
-
-  const drive = google.drive({ version: "v3", auth });
-  let newDocId = null;
+  const downloadUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
 
   try {
-    // Copy the PDF file as a Google Doc (this triggers OCR)
-    const copyResponse = await drive.files.copy({
-      fileId,
-      requestBody: {
-        mimeType: "application/vnd.google-apps.document",
+    const formData = new FormData();
+    formData.append("url", downloadUrl);
+    formData.append("language", "jpn");
+    formData.append("isOverlayRequired", "false");
+    formData.append("OCREngine", "2");
+    formData.append("filetype", "PDF");
+
+    const ocrResponse = await fetch("https://api.ocr.space/parse/image", {
+      method: "POST",
+      headers: {
+        apikey: process.env.OCR_SPACE_API_KEY,
       },
-    });
-    newDocId = copyResponse.data.id;
-
-    // Export the Google Doc as plain text
-    const exportResponse = await drive.files.export({
-      fileId: newDocId,
-      mimeType: "text/plain",
+      body: formData,
     });
 
-    const ocrText = exportResponse.data;
-    return { text: ocrText };
-  } catch (driveErr) {
-    const status = driveErr?.code || driveErr?.response?.status;
-    if (status === 403 || status === 404) {
+    if (!ocrResponse.ok) {
       return {
-        error: `File tidak dapat diakses oleh service account. Pastikan file di-share dengan email service account (lihat field "client_email" di GOOGLE_SERVICE_ACCOUNT_JSON). Error: ${driveErr.message}`,
+        error: `OCR.space API error: HTTP ${ocrResponse.status}`,
       };
     }
-    return {
-      error: `Gagal melakukan OCR via Google Drive: ${driveErr.message}`,
-    };
-  } finally {
-    // Always try to delete the temporary Google Doc
-    if (newDocId) {
-      try {
-        await drive.files.delete({ fileId: newDocId });
-      } catch (deleteErr) {
-        console.warn(
-          `Failed to delete temporary Google Doc (ID: ${newDocId}). It may remain as an orphaned file. Error: ${deleteErr.message}`
-        );
-      }
+
+    const result = await ocrResponse.json();
+
+    if (result.IsErroredOnProcessing) {
+      const errorMessage =
+        result.ErrorMessage?.[0] || result.ErrorDetails || "Unknown OCR error";
+      return {
+        error: `OCR gagal memproses file: ${errorMessage}`,
+      };
     }
+
+    if (
+      !result.ParsedResults ||
+      result.ParsedResults.length === 0 ||
+      !result.ParsedResults[0].ParsedText
+    ) {
+      return { text: "" };
+    }
+
+    return { text: result.ParsedResults[0].ParsedText };
+  } catch (ocrErr) {
+    return {
+      error: `Gagal melakukan OCR via OCR.space: ${ocrErr.message}`,
+    };
   }
 }
 
@@ -227,8 +237,8 @@ export async function POST(request) {
       );
     }
 
-    // Fallback: PDF is image/scanned - try OCR via Google Drive API
-    const ocrResult = await performOcrWithGoogleDrive(fileId);
+    // Fallback: PDF is image/scanned - try OCR via OCR.space API
+    const ocrResult = await performOcrWithOcrSpace(fileId);
 
     if (ocrResult.error) {
       return NextResponse.json(
