@@ -99,6 +99,19 @@ export default function EditCandidatePage() {
       }
     }
 
+    // Translate pekerjaan uraian fields
+    const pekerjaan = data.pekerjaan || [];
+    for (let i = 0; i < pekerjaan.length; i++) {
+      if (pekerjaan[i]?.uraian && pekerjaan[i].uraian.trim()) {
+        try {
+          const result = await translateToJapanese(pekerjaan[i].uraian);
+          newTranslations[`pekerjaan_${i}_uraian`] = result;
+        } catch (err) {
+          console.error(`Translation error for pekerjaan_${i}_uraian:`, err);
+        }
+      }
+    }
+
     setTranslations(newTranslations);
     setTranslating(false);
   };
@@ -894,6 +907,43 @@ export default function EditCandidatePage() {
                     </div>
                   </div>
                 ))}
+
+                {/* Pekerjaan Uraian Translations */}
+                {(data.pekerjaan || []).some((p) => p?.uraian && p.uraian.trim()) && (
+                  <div className="border-t border-gray-200 pt-6">
+                    <h4 className="font-semibold text-gray-700 mb-4">Uraian Riwayat Pekerjaan</h4>
+                    <div className="space-y-4">
+                      {(data.pekerjaan || []).map((p, index) => {
+                        if (!p?.uraian || !p.uraian.trim()) return null;
+                        const key = `pekerjaan_${index}_uraian`;
+                        return (
+                          <div key={key} className="border border-gray-200 rounded-lg p-4">
+                            <label className="form-label text-blue-600">
+                              Pekerjaan {index + 1}: {p.perusahaan || `Entry ${index + 1}`}
+                            </label>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
+                              <div>
+                                <span className="text-xs text-gray-400 block mb-1">Indonesia (asli)</span>
+                                <div className="bg-gray-50 p-2 rounded text-xs text-gray-600 min-h-[60px]">
+                                  {p.uraian}
+                                </div>
+                              </div>
+                              <div>
+                                <span className="text-xs text-gray-400 block mb-1">日本語 (Jepang) — bisa diedit</span>
+                                <textarea
+                                  className="input-field min-h-[60px] text-sm"
+                                  value={translations[key] || ""}
+                                  onChange={(e) => handleTranslationChange(key, e.target.value)}
+                                  placeholder="Terjemahan bahasa Jepang..."
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 

@@ -265,9 +265,23 @@ export default function AdminCandidatesPage() {
             candidateFailed = true;
           }
           // Delay between fields to avoid rate limiting
-          if (j < TRANSLATABLE_FIELDS.length - 1) {
-            await new Promise((r) => setTimeout(r, 500));
+          await new Promise((r) => setTimeout(r, 500));
+        }
+      }
+
+      // Translate pekerjaan uraian fields
+      const pekerjaan = candidate.pekerjaan || [];
+      for (let j = 0; j < pekerjaan.length; j++) {
+        if (pekerjaan[j]?.uraian && pekerjaan[j].uraian.trim()) {
+          try {
+            const translated = await translateToJapanese(pekerjaan[j].uraian);
+            translations[`pekerjaan_${j}_uraian`] = translated;
+          } catch (err) {
+            console.error(`Translate error for pekerjaan_${j}_uraian:`, err);
+            candidateFailed = true;
           }
+          // Delay between fields to avoid rate limiting
+          await new Promise((r) => setTimeout(r, 500));
         }
       }
 
