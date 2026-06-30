@@ -67,6 +67,18 @@ export default function EditCandidatePage() {
     setData((prev) => ({ ...prev, [key]: value }));
   };
 
+  const handleKeluargaChange = (index, field, value) => {
+    const updated = [...(data.keluarga || [{}, {}, {}, {}])];
+    updated[index] = { ...updated[index], [field]: value };
+    setData((prev) => ({ ...prev, keluarga: updated }));
+  };
+
+  const handlePekerjaanChange = (index, field, value) => {
+    const updated = [...(data.pekerjaan || [{}, {}, {}, {}])];
+    updated[index] = { ...updated[index], [field]: value };
+    setData((prev) => ({ ...prev, pekerjaan: updated }));
+  };
+
   const handleTranslationChange = (key, value) => {
     setTranslations((prev) => ({ ...prev, [key]: value }));
   };
@@ -158,6 +170,26 @@ export default function EditCandidatePage() {
 
         {activeTab === "data" && (
           <div className="space-y-4">
+            {/* Informasi Referensi & Job */}
+            <div className="card">
+              <h3 className="font-semibold text-gray-700 mb-3">Informasi Referensi & Job</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[
+                  { key: "kodeReferensi", label: "Kode Referensi" },
+                  { key: "kodeJob", label: "Kode Job" },
+                  { key: "kategoriKandidat", label: "Kategori Kandidat" },
+                  { key: "domisili", label: "Domisili" },
+                  { key: "bidangKerja", label: "Bidang Kerja" },
+                ].map((f) => (
+                  <div key={f.key}>
+                    <label className="form-label">{f.label}</label>
+                    <input className="input-field" value={data[f.key] || ""} onChange={(e) => handleChange(f.key, e.target.value)} />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Data Pribadi (expanded) */}
             <div className="card">
               <h3 className="font-semibold text-gray-700 mb-3">Data Pribadi</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -174,6 +206,12 @@ export default function EditCandidatePage() {
                   { key: "tinggiBadan", label: "Tinggi Badan (CM)" },
                   { key: "beratBadan", label: "Berat Badan (KG)" },
                   { key: "statusPernikahan", label: "Status" },
+                  { key: "dominanTangan", label: "Dominan Tangan" },
+                  { key: "butaWarna", label: "Buta Warna" },
+                  { key: "merokok", label: "Merokok" },
+                  { key: "minumAlkohol", label: "Minum Alkohol" },
+                  { key: "tato", label: "Tato" },
+                  { key: "hobi", label: "Hobi" },
                 ].map((f) => (
                   <div key={f.key}>
                     <label className="form-label">{f.label}</label>
@@ -181,12 +219,240 @@ export default function EditCandidatePage() {
                   </div>
                 ))}
                 <div className="md:col-span-2">
+                  <label className="form-label">Penyakit Berat</label>
+                  <textarea className="input-field" value={data.penyakitBerat || ""} onChange={(e) => handleChange("penyakitBerat", e.target.value)} />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="form-label">Alergi</label>
+                  <textarea className="input-field" value={data.alergi || ""} onChange={(e) => handleChange("alergi", e.target.value)} />
+                </div>
+                <div className="md:col-span-2">
                   <label className="form-label">Alamat</label>
                   <textarea className="input-field" value={data.alamatLengkap || ""} onChange={(e) => handleChange("alamatLengkap", e.target.value)} />
                 </div>
               </div>
             </div>
 
+            {/* Paspor & SIM */}
+            <div className="card">
+              <h3 className="font-semibold text-gray-700 mb-3">Paspor & SIM</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[
+                  { key: "pernahKeJepang", label: "Pernah ke Jepang" },
+                  { key: "memilikiPaspor", label: "Memiliki Paspor" },
+                  { key: "nomorPaspor", label: "Nomor Paspor" },
+                  { key: "masaBerlakuPaspor", label: "Masa Berlaku Paspor" },
+                  { key: "memilikiSim", label: "Memiliki SIM" },
+                ].map((f) => (
+                  <div key={f.key}>
+                    <label className="form-label">{f.label}</label>
+                    <input className="input-field" value={data[f.key] || ""} onChange={(e) => handleChange(f.key, e.target.value)} />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Data Keluarga */}
+            <div className="card">
+              <h3 className="font-semibold text-gray-700 mb-3">Data Keluarga</h3>
+              {[0, 1, 2, 3].map((index) => (
+                <div key={index} className="border border-gray-200 rounded-lg p-4 mb-3">
+                  <h4 className="text-sm font-medium text-gray-600 mb-2">Keluarga {index + 1}</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    {[
+                      { key: "nama", label: "Nama" },
+                      { key: "hubungan", label: "Hubungan" },
+                      { key: "usia", label: "Usia" },
+                      { key: "pekerjaan", label: "Pekerjaan" },
+                      { key: "gaji", label: "Gaji" },
+                      { key: "tinggalBersama", label: "Tinggal Bersama" },
+                    ].map((f) => (
+                      <div key={f.key}>
+                        <label className="form-label">{f.label}</label>
+                        <input
+                          className="input-field"
+                          value={(data.keluarga && data.keluarga[index] && data.keluarga[index][f.key]) || ""}
+                          onChange={(e) => handleKeluargaChange(index, f.key, e.target.value)}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Riwayat Pendidikan */}
+            <div className="card">
+              <h3 className="font-semibold text-gray-700 mb-3">Riwayat Pendidikan</h3>
+
+              <div className="border border-gray-200 rounded-lg p-4 mb-3">
+                <h4 className="text-sm font-medium text-gray-600 mb-2">SD</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {[
+                    { key: "sdNama", label: "Nama Sekolah" },
+                    { key: "sdMasuk", label: "Tahun Masuk" },
+                    { key: "sdLulus", label: "Tahun Lulus" },
+                  ].map((f) => (
+                    <div key={f.key}>
+                      <label className="form-label">{f.label}</label>
+                      <input className="input-field" value={data[f.key] || ""} onChange={(e) => handleChange(f.key, e.target.value)} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="border border-gray-200 rounded-lg p-4 mb-3">
+                <h4 className="text-sm font-medium text-gray-600 mb-2">SMP</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {[
+                    { key: "smpNama", label: "Nama Sekolah" },
+                    { key: "smpMasuk", label: "Tahun Masuk" },
+                    { key: "smpLulus", label: "Tahun Lulus" },
+                  ].map((f) => (
+                    <div key={f.key}>
+                      <label className="form-label">{f.label}</label>
+                      <input className="input-field" value={data[f.key] || ""} onChange={(e) => handleChange(f.key, e.target.value)} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="border border-gray-200 rounded-lg p-4 mb-3">
+                <h4 className="text-sm font-medium text-gray-600 mb-2">SMA/K</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {[
+                    { key: "smaNama", label: "Nama Sekolah" },
+                    { key: "smaMasuk", label: "Tahun Masuk" },
+                    { key: "smaLulus", label: "Tahun Lulus" },
+                    { key: "smaJurusan", label: "Jurusan" },
+                  ].map((f) => (
+                    <div key={f.key}>
+                      <label className="form-label">{f.label}</label>
+                      <input className="input-field" value={data[f.key] || ""} onChange={(e) => handleChange(f.key, e.target.value)} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="border border-gray-200 rounded-lg p-4 mb-3">
+                <h4 className="text-sm font-medium text-gray-600 mb-2">Universitas</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {[
+                    { key: "univNama", label: "Nama Universitas" },
+                    { key: "univMasuk", label: "Tahun Masuk" },
+                    { key: "univLulus", label: "Tahun Lulus" },
+                    { key: "univJurusan", label: "Jurusan" },
+                  ].map((f) => (
+                    <div key={f.key}>
+                      <label className="form-label">{f.label}</label>
+                      <input className="input-field" value={data[f.key] || ""} onChange={(e) => handleChange(f.key, e.target.value)} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Riwayat Pekerjaan */}
+            <div className="card">
+              <h3 className="font-semibold text-gray-700 mb-3">Riwayat Pekerjaan</h3>
+              {[0, 1, 2, 3].map((index) => (
+                <div key={index} className="border border-gray-200 rounded-lg p-4 mb-3">
+                  <h4 className="text-sm font-medium text-gray-600 mb-2">Pekerjaan {index + 1}</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    {[
+                      { key: "perusahaan", label: "Perusahaan" },
+                      { key: "masuk", label: "Masuk" },
+                      { key: "keluar", label: "Keluar" },
+                      { key: "bidang", label: "Bidang" },
+                      { key: "status", label: "Status" },
+                    ].map((f) => (
+                      <div key={f.key}>
+                        <label className="form-label">{f.label}</label>
+                        <input
+                          className="input-field"
+                          value={(data.pekerjaan && data.pekerjaan[index] && data.pekerjaan[index][f.key]) || ""}
+                          onChange={(e) => handlePekerjaanChange(index, f.key, e.target.value)}
+                        />
+                      </div>
+                    ))}
+                    <div className="md:col-span-3">
+                      <label className="form-label">Uraian Pekerjaan</label>
+                      <textarea
+                        className="input-field"
+                        value={(data.pekerjaan && data.pekerjaan[index] && data.pekerjaan[index].uraian) || ""}
+                        onChange={(e) => handlePekerjaanChange(index, "uraian", e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Tentang Jepang & Bahasa */}
+            <div className="card">
+              <h3 className="font-semibold text-gray-700 mb-3">Tentang Jepang & Bahasa</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[
+                  { key: "lamaInginTinggal", label: "Lama Ingin Tinggal di Jepang" },
+                  { key: "lamaBelajarBahasaJepang", label: "Lama Belajar Bahasa Jepang" },
+                ].map((f) => (
+                  <div key={f.key}>
+                    <label className="form-label">{f.label}</label>
+                    <input className="input-field" value={data[f.key] || ""} onChange={(e) => handleChange(f.key, e.target.value)} />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Kontak Darurat */}
+            <div className="card">
+              <h3 className="font-semibold text-gray-700 mb-3">Kontak Darurat</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[
+                  { key: "nomorDarurat", label: "Nomor Darurat" },
+                  { key: "namaPemilikDarurat", label: "Nama Pemilik Nomor" },
+                  { key: "hubunganDarurat", label: "Hubungan" },
+                ].map((f) => (
+                  <div key={f.key}>
+                    <label className="form-label">{f.label}</label>
+                    <input className="input-field" value={data[f.key] || ""} onChange={(e) => handleChange(f.key, e.target.value)} />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Promosi Diri */}
+            <div className="card">
+              <h3 className="font-semibold text-gray-700 mb-3">Promosi Diri</h3>
+              <div>
+                <label className="form-label">Promosi Diri</label>
+                <textarea className="input-field min-h-[100px]" value={data.promosiDiri || ""} onChange={(e) => handleChange("promosiDiri", e.target.value)} />
+              </div>
+            </div>
+
+            {/* Link Dokumen */}
+            <div className="card">
+              <h3 className="font-semibold text-gray-700 mb-3">Link Dokumen</h3>
+              <div className="grid grid-cols-1 gap-3">
+                {[
+                  { key: "pasPhoto", label: "Pas Photo (URL)" },
+                  { key: "sertifikatBahasaJepang", label: "Sertifikat Bahasa Jepang (URL)" },
+                  { key: "videoJFT", label: "Video JFT (URL)" },
+                  { key: "sertifikatSSW", label: "Sertifikat SSW (URL)" },
+                  { key: "videoSSW", label: "Video SSW (URL)" },
+                  { key: "cvRirekisho", label: "CV/Rirekisho (URL)" },
+                  { key: "sertifikatSenmonkyuu", label: "Sertifikat Senmonkyuu (URL)" },
+                  { key: "sertifikatSelesaiMagang", label: "Sertifikat Selesai Magang (URL)" },
+                ].map((f) => (
+                  <div key={f.key}>
+                    <label className="form-label">{f.label}</label>
+                    <input className="input-field text-xs" value={data[f.key] || ""} onChange={(e) => handleChange(f.key, e.target.value)} placeholder="https://drive.google.com/..." />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Motivasi & Kelebihan */}
             <div className="card">
               <h3 className="font-semibold text-gray-700 mb-3">Motivasi & Kelebihan (Indonesia)</h3>
               <div className="space-y-4">
