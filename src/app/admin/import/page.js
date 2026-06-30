@@ -141,13 +141,22 @@ function parseMultilineEducation(text) {
   const lines = text.split(/\n/).map((l) => l.trim()).filter((l) => l && l !== "-");
   const result = {};
 
-  const SD_KEYWORDS = ["SD"];
+  const SD_KEYWORDS = ["SDIT", "SDN", "SDS", "SDI", "SD", "MIN", "MI"];
   const SMP_KEYWORDS = ["SMP", "MTS", "MTSN"];
   const SMA_KEYWORDS = ["SMA", "SMK", "SMKN", "SMAN", "MA", "MAN", "MAK"];
   const UNIV_KEYWORDS = ["UNIVERSITAS", "UNIV", "POLITEKNIK", "AKADEMI", "STIKES", "INSTITUT", "SEKOLAH TINGGI", "STT", "STMIK", "STTD"];
 
+  // Check if a school name starts with a keyword followed by a space, digit, or is the keyword exactly
+  function matchesKeyword(upper, kw) {
+    if (upper === kw) return true;
+    if (upper.startsWith(kw + " ") || upper.startsWith(kw + ".")) return true;
+    // Check if keyword appears at start followed by a digit (e.g. "SDN4")
+    if (upper.startsWith(kw) && upper.length > kw.length && /\d/.test(upper[kw.length])) return true;
+    return false;
+  }
+
   function detectLevel(nama) {
-    const upper = nama.toUpperCase();
+    const upper = nama.toUpperCase().trim();
     for (const kw of UNIV_KEYWORDS) {
       if (upper.includes(kw)) return "univ";
     }
@@ -158,7 +167,7 @@ function parseMultilineEducation(text) {
       if (upper.includes(kw)) return "smp";
     }
     for (const kw of SD_KEYWORDS) {
-      if (/\bSD[\s\d]/.test(upper) || /\bSD$/.test(upper)) return "sd";
+      if (matchesKeyword(upper, kw)) return "sd";
     }
     return null;
   }
@@ -560,47 +569,66 @@ function parseRow(headers, values) {
     }
   }
 
-  // 2. Family: if first family member is empty, try combined column
-  if (!result.keluarga[0].nama) {
-    const combinedFamily = get(
-      "DAFTAR KELUARGA 1 : ISI NAMA LENGKAP KELUARGA ANDA",
-      "DAFTAR KELUARGA 1 :  ISI NAMA LENGKAP KELUARGA ANDA",
-      "DAFTAR KELUARGA",
-      "KELUARGA ANDA",
-      "DATA KELUARGA"
-    );
+  // 2. Family: if first family member is empty OR contains raw multi-line data (substring collision), parse combined column
+  const familyNeedsParsing = !result.keluarga[0].nama || result.keluarga[0].nama.includes("\n");
+  if (familyNeedsParsing) {
+    // If keluarga[0].nama itself contains newlines, it was matched from the combined column via substring collision
+    let combinedFamily = (result.keluarga[0].nama && result.keluarga[0].nama.includes("\n"))
+      ? result.keluarga[0].nama
+      : get(
+          "DAFTAR KELUARGA 1 : ISI NAMA LENGKAP KELUARGA ANDA",
+          "DAFTAR KELUARGA 1 :  ISI NAMA LENGKAP KELUARGA ANDA",
+          "DAFTAR KELUARGA",
+          "KELUARGA ANDA",
+          "DATA KELUARGA"
+        );
     if (combinedFamily) {
       const familyParsed = parseMultilineFamily(combinedFamily);
-      for (let i = 0; i < familyParsed.length && i < 4; i++) {
-        if (!result.keluarga[i].nama) {
-          if (familyParsed[i].nama) result.keluarga[i].nama = familyParsed[i].nama;
-          if (familyParsed[i].hubungan) result.keluarga[i].hubungan = familyParsed[i].hubungan;
-          if (familyParsed[i].usia) result.keluarga[i].usia = familyParsed[i].usia;
-          if (familyParsed[i].pekerjaan) result.keluarga[i].pekerjaan = familyParsed[i].pekerjaan;
-          if (familyParsed[i].gaji) result.keluarga[i].gaji = familyParsed[i].gaji;
-          if (familyParsed[i].tinggalBersama) result.keluarga[i].tinggalBersama = familyParsed[i].tinggalBersama;
+      // Reset keluarga array slots and fill from parsed data
+      for (let i = 0; i < 4; i++) {
+        if (familyParsed[i]) {
+          result.keluarga[i] = {
+            nama: familyParsed[i].nama || "",
+            hubungan: familyParsed[i].hubungan || "",
+            usia: familyParsed[i].usia || "",
+            pekerjaan: familyParsed[i].pekerjaan || "",
+            gaji: familyParsed[i].gaji || "",
+            tinggalBersama: familyParsed[i].tinggalBersama || ""
+          };
+        } else if (familyNeedsParsing && result.keluarga[0].nama && result.keluarga[0].nama.includes("\n")) {
+          // Clear remaining slots if we were fixing a collision (raw data was in slot 0)
+          result.keluarga[i] = { nama: "", hubungan: "", usia: "", pekerjaan: "", gaji: "", tinggalBersama: "" };
         }
       }
     }
   }
 
-  // 3. Work: if first work entry is empty, try combined column
-  if (!result.pekerjaan[0].perusahaan) {
-    const combinedWork = get(
-      "RIWAYAT BEKERJA",
-      "RIWAYAT PEKERJAAN",
-      "RIWAYAT BEKERJA (TERBARU)"
-    );
+  // 3. Work: if first work entry is empty OR contains raw multi-line data (substring collision), parse combined column
+  const workNeedsParsing = !result.pekerjaan[0].perusahaan || result.pekerjaan[0].perusahaan.includes("\n");
+  if (workNeedsParsing) {
+    // If perusahaan itself contains newlines, it was matched from the combined column via substring collision
+    let combinedWork = (result.pekerjaan[0].perusahaan && result.pekerjaan[0].perusahaan.includes("\n"))
+      ? result.pekerjaan[0].perusahaan
+      : get(
+          "RIWAYAT BEKERJA",
+          "RIWAYAT PEKERJAAN",
+          "RIWAYAT BEKERJA (TERBARU)"
+        );
     if (combinedWork) {
       const workParsed = parseMultilineWork(combinedWork);
-      for (let i = 0; i < workParsed.length && i < 4; i++) {
-        if (!result.pekerjaan[i].perusahaan) {
-          if (workParsed[i].perusahaan) result.pekerjaan[i].perusahaan = workParsed[i].perusahaan;
-          if (workParsed[i].masuk) result.pekerjaan[i].masuk = workParsed[i].masuk;
-          if (workParsed[i].keluar) result.pekerjaan[i].keluar = workParsed[i].keluar;
-          if (workParsed[i].bidang) result.pekerjaan[i].bidang = workParsed[i].bidang;
-          if (workParsed[i].status) result.pekerjaan[i].status = workParsed[i].status;
-          if (workParsed[i].uraian) result.pekerjaan[i].uraian = workParsed[i].uraian;
+      for (let i = 0; i < 4; i++) {
+        if (workParsed[i]) {
+          result.pekerjaan[i] = {
+            perusahaan: workParsed[i].perusahaan || "",
+            masuk: workParsed[i].masuk || "",
+            keluar: workParsed[i].keluar || "",
+            bidang: workParsed[i].bidang || "",
+            status: workParsed[i].status || "",
+            uraian: workParsed[i].uraian || ""
+          };
+        } else if (workNeedsParsing && result.pekerjaan[0].perusahaan && result.pekerjaan[0].perusahaan.includes("\n")) {
+          // Clear remaining slots if we were fixing a collision
+          result.pekerjaan[i] = { perusahaan: "", masuk: "", keluar: "", bidang: "", status: "", uraian: "" };
         }
       }
     }
