@@ -184,7 +184,19 @@ export default function CandidateFormPage() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => {
+      const updated = { ...prev, [name]: value };
+      // When kategori changes, reset bidangKerja and bidangKerjaLainnya
+      if (name === "kategoriKandidat") {
+        updated.bidangKerja = "";
+        updated.bidangKerjaLainnya = "";
+      }
+      // When bidangKerja changes away from LAINNYA, clear bidangKerjaLainnya
+      if (name === "bidangKerja" && value !== "LAINNYA") {
+        updated.bidangKerjaLainnya = "";
+      }
+      return updated;
+    });
   };
 
   const handleKeluargaChange = (index, field, value) => {
@@ -208,8 +220,13 @@ export default function CandidateFormPage() {
     setLoading(true);
     setSaved(false);
     try {
+      const dataToSave = { ...formData };
+      // If bidangKerja is "LAINNYA", replace it with the manually entered value
+      if (dataToSave.bidangKerja === "LAINNYA" && dataToSave.bidangKerjaLainnya) {
+        dataToSave.bidangKerja = dataToSave.bidangKerjaLainnya;
+      }
       await setDoc(doc(db, "candidates", user.uid), {
-        ...formData,
+        ...dataToSave,
         userId: user.uid,
         updatedAt: new Date().toISOString(),
         submittedAt: new Date().toISOString(),

@@ -23,5 +23,5 @@
     "Run npm run build to confirm no compilation errors"
   ],
   "blocked_reason": null,
-  "findings": "All changes built successfully with npm run build. No test suite configured."
+  "findings": "All changes built successfully with npm run build. No test suite configured. Review fixes applied: (1) handleSubmit now merges bidangKerjaLainnya into bidangKerja when value is LAINNYA before saving to Firestore; (2) handleChange clears bidangKerjaLainnya when bidangKerja switches away from LAINNYA; (3) dokumenSIM stored but not surfaced is acceptable scope per user request; (4) handleChange resets bidangKerja and bidangKerjaLainnya when kategoriKandidat changes."
 }
