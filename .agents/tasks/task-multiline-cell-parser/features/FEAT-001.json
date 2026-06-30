@@ -22,5 +22,5 @@
     "Run 'npm run build' in /projects/sandbox/cv-portal and confirm it succeeds with exit code 0"
   ],
   "blocked_reason": null,
-  "findings": "Build passes successfully. No test framework configured so verification is build-only. Review fixes applied: (1) split regex changed from /\\s*-\\s*/ to literal ' - ' string split in all three parser functions, (2) SD detection uses word-boundary regex /\\bSD[\\s\\d]/ to prevent false positives, (3) includes('\\n') gate removed from all three post-processing blocks, (4) education guard changed from AND to OR condition so parser fires when any level is missing."
+  "findings": "Build passes successfully. No test framework configured so verification is build-only. v2 review fixes applied: (1) SD_KEYWORDS expanded to [SDIT, SDN, SDS, SDI, SD, MIN, MI] ordered longest-first, (2) SD detection changed from regex to matchesKeyword() function that checks startsWith(kw + space/digit/period) to avoid false positives on DARUSSALAM while correctly matching SDN/SDS/SDI/SDIT, (3) Family and work post-processing now detect substring collision by checking if extracted field contains newlines and uses that raw data directly as combined parser input, (4) When collision is detected, keluarga/pekerjaan arrays are fully reset from parsed data."
 }
