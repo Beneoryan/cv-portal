@@ -107,7 +107,9 @@ export default function CandidateFormPage() {
     memilikiPaspor: "TIDAK",
     nomorPaspor: "",
     masaBerlakuPaspor: "",
-    memilikiSim: "TIDAK PUNYA",
+    memilikiSim: "TIDAK",
+    jenisSim: "",
+    nomorSim: "",
     // Keluarga (max 4 entries for simplicity)
     keluarga: [
       { nama: "", hubungan: "", usia: "", pekerjaan: "", gaji: "", tinggalBersama: "" },
@@ -194,6 +196,11 @@ export default function CandidateFormPage() {
       // When bidangKerja changes away from LAINNYA, clear bidangKerjaLainnya
       if (name === "bidangKerja" && value !== "LAINNYA") {
         updated.bidangKerjaLainnya = "";
+      }
+      // When memilikiSim changes away from YA, clear SIM-related fields
+      if (name === "memilikiSim" && value !== "YA") {
+        updated.jenisSim = "";
+        updated.nomorSim = "";
       }
       return updated;
     });
@@ -325,7 +332,14 @@ export default function CandidateFormPage() {
                 <InputField label="Masa Berlaku Paspor" name="masaBerlakuPaspor" value={formData.masaBerlakuPaspor} onChange={handleChange} type="date" />
               </>
             )}
-            <InputField label="Memiliki SIM?" name="memilikiSim" value={formData.memilikiSim} onChange={handleChange} options={["TIDAK PUNYA", "SIM A", "SIM B", "SIM C"]} />
+            <InputField label="Memiliki SIM?" name="memilikiSim" value={formData.memilikiSim} onChange={handleChange} options={YA_TIDAK} />
+            {formData.memilikiSim === "YA" && (
+              <>
+                <InputField label="Jenis SIM" name="jenisSim" value={formData.jenisSim} onChange={handleChange} options={["SIM A", "SIM B1", "SIM B2", "SIM C"]} required />
+                <InputField label="Nomor SIM" name="nomorSim" value={formData.nomorSim} onChange={handleChange} required placeholder="Masukkan nomor SIM" />
+                <UploadField label="Upload SIM" name="dokumenSIM" value={formData.dokumenSIM} onChange={handleChange} accept="image/*,application/pdf" userId={user?.uid} fullWidth />
+              </>
+            )}
           </FormSection>
 
           {/* KHUSUS EX-MAGANG: Sertifikat Tambahan */}
@@ -478,7 +492,6 @@ export default function CandidateFormPage() {
             <UploadField label="Sertifikat SSW" name="sertifikatSSW" value={formData.sertifikatSSW} onChange={handleChange} accept="image/*,application/pdf" userId={user?.uid} fullWidth />
             <UploadField label="Video Screen Recording SSW" name="videoSSW" value={formData.videoSSW} onChange={handleChange} accept="video/*" userId={user?.uid} fullWidth />
             <UploadField label="CV/Rirekisho" name="cvRirekisho" value={formData.cvRirekisho} onChange={handleChange} accept="application/pdf,image/*" userId={user?.uid} fullWidth />
-            <UploadField label="SIM (Surat Izin Mengemudi)" name="dokumenSIM" value={formData.dokumenSIM} onChange={handleChange} accept="image/*,application/pdf" userId={user?.uid} fullWidth />
           </FormSection>
 
           <div className="flex justify-end space-x-3 mb-12">
