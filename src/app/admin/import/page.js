@@ -269,6 +269,8 @@ function isFamilyDataLine(line) {
   const trimmed = line.trim();
   // Empty or just a dash
   if (!trimmed || trimmed === "-") return false;
+  // Starts with kanji character (CJK Unified Ideographs range) - likely a family entry with kanji prefix
+  if (/^[\u4E00-\u9FFF]/.test(trimmed)) return true;
   // Starts with "- " prefix (typical family list format)
   if (/^-\s+/.test(trimmed)) return true;
   // Contains at least one " - " separator (name - age - job pattern)
@@ -361,9 +363,50 @@ function detectHubungan(entry, originalLine, index, allEntries) {
   return "";
 }
 
+// Kanji-to-hubungan mapping for family relationship detection
+// Longer kanji sequences must come first to ensure correct matching (e.g., 祖父 before 父)
+const KANJI_HUBUNGAN_MAP = [
+  { kanji: "祖父", hubungan: "Kakek" },
+  { kanji: "祖母", hubungan: "Nenek" },
+  { kanji: "息子", hubungan: "Anak (Laki-laki)" },
+  { kanji: "父", hubungan: "Ayah" },
+  { kanji: "母", hubungan: "Ibu" },
+  { kanji: "兄", hubungan: "Kakak (Laki-laki)" },
+  { kanji: "姉", hubungan: "Kakak (Perempuan)" },
+  { kanji: "弟", hubungan: "Adik (Laki-laki)" },
+  { kanji: "妹", hubungan: "Adik (Perempuan)" },
+  { kanji: "夫", hubungan: "Suami" },
+  { kanji: "妻", hubungan: "Istri" },
+  { kanji: "娘", hubungan: "Anak (Perempuan)" },
+];
+
+// Strip any remaining CJK/Japanese characters from a string
+function stripKanjiCharacters(str) {
+  if (!str || typeof str !== "string") return str;
+  // Remove CJK Unified Ideographs, Hiragana, Katakana, and CJK punctuation/symbols
+  return str.replace(/[\u3000-\u303F\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF\uF900-\uFAFF]/g, "").trim();
+}
+
+// Detect and extract kanji relationship prefix from a line
+// Returns { hubungan, cleanedLine } where hubungan is the mapped relationship or "" if no kanji found
+function extractKanjiHubungan(line) {
+  const trimmed = line.trim();
+  for (const { kanji, hubungan } of KANJI_HUBUNGAN_MAP) {
+    if (trimmed.startsWith(kanji)) {
+      // Remove kanji and any following fullwidth space, regular space, or " - " separator
+      let rest = trimmed.slice(kanji.length);
+      // Strip leading fullwidth space (\u3000), regular spaces, and " - " separator
+      rest = rest.replace(/^[\u3000\s]*-?\s*/, "").trim();
+      return { hubungan, cleanedLine: rest };
+    }
+  }
+  return { hubungan: "", cleanedLine: trimmed };
+}
+
 // Parse multi-line family text into array of family members
 // Each line format: "nama - usia - pekerjaan - gaji" or "nama - hubungan - usia - pekerjaan - gaji"
 // Lines may be prefixed with "- "
+// Also handles kanji prefixes like 父, 母, 弟, 妹 etc. which map to hubungan
 function parseMultilineFamily(text) {
   if (!text || typeof text !== "string") return [];
   const lines = text.split(/\n/).map((l) => l.trim()).filter((l) => l && l !== "-");
@@ -377,7 +420,11 @@ function parseMultilineFamily(text) {
     const cleanLine = line.replace(/^-\s*/, "").trim();
     if (!cleanLine) continue;
     // Remove trailing "..." (truncated text)
-    const trimmedLine = cleanLine.replace(/\.{2,}$/, "").trim();
+    let trimmedLine = cleanLine.replace(/\.{2,}$/, "").trim();
+
+    // Extract kanji-based hubungan if present (e.g., "父 - Moch Chaerudin - 45")
+    const { hubungan: kanjiHubungan, cleanedLine } = extractKanjiHubungan(trimmedLine);
+    trimmedLine = cleanedLine;
     // Split by " - " (literal space-dash-space) separator to avoid splitting embedded hyphens in names
     const parts = trimmedLine.split(" - ");
     if (parts.length === 0) continue;
@@ -455,6 +502,18 @@ function parseMultilineFamily(text) {
         }
       }
     }
+
+    // If kanji-based hubungan was detected, set it (overrides any parsed hubungan from the remaining text)
+    if (kanjiHubungan) {
+      entry.hubungan = kanjiHubungan;
+    }
+
+    // Strip any leftover kanji/Japanese characters from all family fields
+    entry.nama = stripKanjiCharacters(entry.nama);
+    entry.hubungan = stripKanjiCharacters(entry.hubungan) || entry.hubungan; // preserve hubungan if stripping removes it entirely (shouldn't happen)
+    entry.usia = stripKanjiCharacters(entry.usia);
+    entry.pekerjaan = stripKanjiCharacters(entry.pekerjaan);
+    entry.gaji = stripKanjiCharacters(entry.gaji);
 
     // Auto-detect hubungan if not already set
     if (!entry.hubungan || !entry.hubungan.trim()) {
