@@ -133,14 +133,20 @@ export default function AdminCandidatesPage() {
 
     if (targets.length === 0) return;
 
+    if (!window.confirm(`Proses ekstraksi sertifikat untuk ${targets.length} kandidat?`)) return;
+
     setExtractingAll(true);
     setBulkProgress("Mengekstrak sertifikat... 0/" + targets.length);
+
+    let successCount = 0;
+    let failCount = 0;
 
     for (let i = 0; i < targets.length; i++) {
       const candidate = targets[i];
       setBulkProgress(`Mengekstrak sertifikat... ${i + 1}/${targets.length}`);
 
       const updates = {};
+      let candidateFailed = false;
 
       // Extract tanggalJFT from sertifikatBahasaJepang
       if (candidate.sertifikatBahasaJepang) {
@@ -156,6 +162,7 @@ export default function AdminCandidatesPage() {
           }
         } catch (err) {
           console.error("Extract JFT error:", err);
+          candidateFailed = true;
         }
       }
 
@@ -177,6 +184,7 @@ export default function AdminCandidatesPage() {
           }
         } catch (err) {
           console.error("Extract SSW error:", err);
+          candidateFailed = true;
         }
       }
 
@@ -194,6 +202,7 @@ export default function AdminCandidatesPage() {
           }
         } catch (err) {
           console.error("Extract Senmonkyuu error:", err);
+          candidateFailed = true;
         }
       }
 
@@ -201,14 +210,22 @@ export default function AdminCandidatesPage() {
       if (Object.keys(updates).length > 0) {
         try {
           await updateDoc(doc(db, "candidates", candidate.id), updates);
+          if (!candidateFailed) successCount++;
+          else failCount++;
         } catch (err) {
           console.error("Update doc error:", err);
+          failCount++;
         }
+      } else if (candidateFailed) {
+        failCount++;
+      } else {
+        // No cert URLs to process, count as success (nothing to do)
+        successCount++;
       }
     }
 
     setExtractingAll(false);
-    setBulkProgress("");
+    setBulkProgress(`Selesai! Berhasil: ${successCount}, Gagal: ${failCount}`);
     loadCandidates();
   };
 
@@ -220,24 +237,36 @@ export default function AdminCandidatesPage() {
 
     if (targets.length === 0) return;
 
+    if (!window.confirm(`Proses terjemahan untuk ${targets.length} kandidat?`)) return;
+
     const TRANSLATABLE_FIELDS = ["kelebihan", "kekurangan", "alasanKeJepang", "alasanMelamarBidang", "alasanKaigofukushishi", "impianMasaDepan"];
 
     setTranslatingAll(true);
     setBulkProgress("Menerjemahkan... 0/" + targets.length);
+
+    let successCount = 0;
+    let failCount = 0;
 
     for (let i = 0; i < targets.length; i++) {
       const candidate = targets[i];
       setBulkProgress(`Menerjemahkan... ${i + 1}/${targets.length}`);
 
       const translations = candidate.translations || {};
+      let candidateFailed = false;
 
-      for (const field of TRANSLATABLE_FIELDS) {
+      for (let j = 0; j < TRANSLATABLE_FIELDS.length; j++) {
+        const field = TRANSLATABLE_FIELDS[j];
         if (candidate[field] && candidate[field].trim()) {
           try {
             const translated = await translateToJapanese(candidate[field]);
             translations[field] = translated;
           } catch (err) {
             console.error(`Translate error for ${field}:`, err);
+            candidateFailed = true;
+          }
+          // Delay between fields to avoid rate limiting
+          if (j < TRANSLATABLE_FIELDS.length - 1) {
+            await new Promise((r) => setTimeout(r, 500));
           }
         }
       }
@@ -245,8 +274,11 @@ export default function AdminCandidatesPage() {
       // Save translations to Firestore
       try {
         await updateDoc(doc(db, "candidates", candidate.id), { translations });
+        if (!candidateFailed) successCount++;
+        else failCount++;
       } catch (err) {
         console.error("Update translations error:", err);
+        failCount++;
       }
 
       // Delay between candidates to avoid rate limiting
@@ -256,7 +288,7 @@ export default function AdminCandidatesPage() {
     }
 
     setTranslatingAll(false);
-    setBulkProgress("");
+    setBulkProgress(`Selesai! Berhasil: ${successCount}, Gagal: ${failCount}`);
     loadCandidates();
   };
 
@@ -314,6 +346,12 @@ export default function AdminCandidatesPage() {
           <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg flex items-center space-x-3">
             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-yellow-600"></div>
             <span className="text-sm font-medium text-yellow-800">{bulkProgress}</span>
+          </div>
+        )}
+        {!extractingAll && !translatingAll && bulkProgress && (
+          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center justify-between">
+            <span className="text-sm font-medium text-green-800">{bulkProgress}</span>
+            <button onClick={() => setBulkProgress("")} className="text-green-600 hover:text-green-800 text-xs font-medium">Tutup</button>
           </div>
         )}
 

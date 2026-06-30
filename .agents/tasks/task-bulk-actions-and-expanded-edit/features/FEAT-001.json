@@ -1,0 +1,28 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "Add bulk 'Ekstraksi Semua Sertifikat' and 'Translate Semua' buttons to the candidates page. These buttons work on selected candidates (or all if none selected), calling the extract-cert-date API and translateHelper respectively, updating Firestore, and showing progress.",
+  "status": "completed",
+  "steps": [
+    "In src/app/admin/candidates/page.js, add import for updateDoc from firebase/firestore (already has doc imported)",
+    "Add import for translateToJapanese from @/lib/translateHelper",
+    "Add state variables: extractingAll (boolean), translatingAll (boolean), bulkProgress (string for showing X/Y progress)",
+    "Add a handleBulkExtract async function that: determines target candidates (selected ones if any, otherwise all filtered), iterates over each candidate checking for cert links (sertifikatBahasaJepang, sertifikatSSW, sertifikatSenmonkyuu), calls /api/extract-cert-date for each link, updates Firestore doc with extracted dates (tanggalJFT, tanggalSSW, tanggalSSWKaigo for KAIGO, tanggalShuryoShomei), updates progress state showing current/total",
+    "Add a handleBulkTranslate async function that: determines target candidates (selected ones if any, otherwise all filtered), for each candidate translates TRANSLATABLE_FIELDS (kelebihan, kekurangan, alasanKeJepang, alasanMelamarBidang, alasanKaigofukushishi, impianMasaDepan) using translateToJapanese(), saves translations to Firestore under candidate.translations object, updates progress state",
+    "Add two buttons in the header area (near existing delete/reset buttons) visible only to admin role: 'Ekstraksi Semua Sertifikat' (green themed) and 'Translate Semua' (purple themed). Show progress text next to them when running.",
+    "Add a progress banner/bar below the header that shows bulkProgress text when extractingAll or translatingAll is true"
+  ],
+  "acceptance_criteria": [
+    "The candidates page shows 'Ekstraksi Semua Sertifikat' and 'Translate Semua' buttons for admin users",
+    "Clicking 'Ekstraksi Semua Sertifikat' processes selected candidates (or all if none selected) and shows progress like 'Mengekstrak sertifikat... 3/10'",
+    "Clicking 'Translate Semua' processes selected candidates (or all if none selected) and shows progress like 'Menerjemahkan... 5/10'",
+    "Both buttons are disabled while processing",
+    "Firestore documents are updated with extracted dates and translations respectively",
+    "npm run build completes without errors"
+  ],
+  "verification": [
+    "Run `npm run build` and confirm no compilation errors"
+  ],
+  "blocked_reason": null,
+  "findings": "Build passes cleanly. Addressed review issues #1, #4, #5: added window.confirm before both bulk operations, tracked success/fail counts with summary display after completion, and added 500ms delay between translateToJapanese calls within each candidate. Also added a dismissable green summary banner that shows after operations complete."
+}

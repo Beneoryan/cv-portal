@@ -1,0 +1,32 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Expand the edit candidate form (Data Kandidat tab) to include ALL fields from the Form Responses 3 import. Currently only shows basic personal data and motivasi. Need to add sections for: additional personal info (kodeReferensi, kodeJob, kategoriKandidat, domisili, bidangKerja, health fields, passport, SIM), keluarga (4 members), pendidikan (SD/SMP/SMA/Univ), riwayat pekerjaan (4 entries), emergency contact, and additional document links.",
+  "status": "completed",
+  "steps": [
+    "In src/app/admin/edit/[id]/page.js, expand the 'Data Kandidat' tab (activeTab === 'data') section",
+    "Add a new card section 'Informasi Referensi & Job' with fields: kodeReferensi, kodeJob, kategoriKandidat, domisili, bidangKerja",
+    "Expand 'Data Pribadi' card to include missing personal fields: dominanTangan, butaWarna, merokok, minumAlkohol, tato, penyakitBerat, alergi, hobi",
+    "Add a new card section 'Paspor & SIM' with fields: pernahKeJepang, memilikiPaspor, nomorPaspor, masaBerlakuPaspor, memilikiSim",
+    "Add a new card section 'Data Keluarga' that renders 4 family member entries. Each with fields: nama, hubungan, usia, pekerjaan, gaji, tinggalBersama. Use a nested handler (handleKeluargaChange) that updates the keluarga array in data state.",
+    "Add a new card section 'Riwayat Pendidikan' with subsections for SD (sdNama, sdMasuk, sdLulus), SMP (smpNama, smpMasuk, smpLulus), SMA (smaNama, smaMasuk, smaLulus, smaJurusan), Universitas (univNama, univMasuk, univLulus, univJurusan)",
+    "Add a new card section 'Riwayat Pekerjaan' that renders 4 work history entries. Each with fields: perusahaan, masuk, keluar, bidang, status, uraian. Use a nested handler (handlePekerjaanChange) that updates the pekerjaan array in data state.",
+    "Add a new card section 'Tentang Jepang & Bahasa' with fields: lamaInginTinggal, lamaBelajarBahasaJepang",
+    "Add a new card section 'Kontak Darurat' with fields: nomorDarurat, namaPemilikDarurat, hubunganDarurat",
+    "Add a new card section 'Promosi Diri' with a textarea for promosiDiri",
+    "Add a new card section 'Link Dokumen' (moved from certs tab or duplicated) with ALL document fields: pasPhoto, sertifikatBahasaJepang, videoJFT, sertifikatSSW, videoSSW, cvRirekisho, sertifikatSenmonkyuu, sertifikatSelesaiMagang",
+    "Ensure all new sections follow existing UI patterns: card class wrapper, form-label class for labels, input-field class for inputs, grid-cols-1 md:grid-cols-2 layout where appropriate, textarea for long text fields"
+  ],
+  "acceptance_criteria": [
+    "The edit page Data Kandidat tab shows all sections: Informasi Referensi, Data Pribadi (expanded), Paspor & SIM, Data Keluarga (4 entries), Riwayat Pendidikan (SD/SMP/SMA/Univ), Riwayat Pekerjaan (4 entries), Tentang Jepang, Kontak Darurat, Promosi Diri, Link Dokumen",
+    "All fields from parseRow() in import/page.js are editable in the form",
+    "Array fields (keluarga, pekerjaan) properly update nested state",
+    "Saving works correctly - all new fields are persisted to Firestore",
+    "npm run build completes without errors"
+  ],
+  "verification": [
+    "Run `npm run build` and confirm no compilation errors"
+  ],
+  "blocked_reason": null,
+  "findings": "Build passes cleanly. Edit page Data Kandidat tab now shows all fields from Form Responses 3. Page size grew from ~4KB to 6.73KB (First Load JS 220KB). Array handlers for keluarga and pekerjaan properly manage nested state updates."
+}

@@ -1,0 +1,14 @@
+{
+  "task_id": "task-bulk-actions-and-expanded-edit",
+  "task_description": "Add bulk 'Ekstraksi Semua Sertifikat' and 'Translate Semua' buttons to the candidates page, and expand the edit form to include all fields from Form Responses 3 import.",
+  "status": "completed",
+  "feature_order": ["FEAT-001", "FEAT-002"],
+  "blocked_reason": null,
+  "verification": {
+    "build": "pass",
+    "tests": "pass",
+    "test_quality": "skipped",
+    "docker_build": "skipped",
+    "summary": "npm run build passes cleanly. All routes compile. No test framework in project so test verification is N/A."
+  }
+}

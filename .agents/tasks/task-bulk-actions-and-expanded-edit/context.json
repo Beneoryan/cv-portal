@@ -1,0 +1,23 @@
+{
+  "project_type": "Next.js 15 app with Firebase Firestore backend, Indonesian CV portal",
+  "language": "JavaScript (React)",
+  "build_system": "npm with Next.js CLI",
+  "test_framework": "None (no test files exist)",
+  "build_command": "npm run build",
+  "test_command": "N/A - no test framework configured",
+  "verification_instructions": "Run `npm run build` to validate no compile errors. Manual verification of UI features.",
+  "snapshot_or_generated_files": null,
+  "setup_instructions": "npm install (already done, node_modules exists)",
+  "environment_constraints": "No test framework. Verification is via `npm run build`. External APIs (OCR.space, MyMemory, Google Translate) used at runtime.",
+  "contribution_requirements": "No CONTRIBUTING.md. Code follows 'use client' pattern, uses Tailwind CSS utility classes with custom classes (card, btn-primary, btn-secondary, input-field, form-label).",
+  "key_patterns": "Pages in src/app/admin/*, components in src/components/*, libs in src/lib/*. Uses useAuth() hook for auth. Firestore collection 'candidates'. Admin pages check userData.role === 'admin'. UI uses card class for sections, grid layouts, input-field/form-label for forms.",
+  "relevant_files": [
+    "src/app/admin/candidates/page.js",
+    "src/app/admin/edit/[id]/page.js",
+    "src/app/admin/import/page.js",
+    "src/app/api/extract-cert-date/route.js",
+    "src/lib/translateHelper.js",
+    "src/lib/firebase.js"
+  ],
+  "directory_structure": "src/app/admin/ contains admin pages (candidates, edit/[id], import, cv, settings, setup). src/app/api/ for API routes. src/components/ for shared components. src/lib/ for utilities (firebase, translateHelper). src/context/ for AuthContext."
+}
