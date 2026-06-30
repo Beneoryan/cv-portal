@@ -195,7 +195,7 @@ export default function CVTemplate({ data }) {
               <td className="text-xs">{formatDateShortJP(p.masuk)}</td>
               <td className="text-xs">{formatDateShortJP(p.keluar)}</td>
               <td className="text-xs">{jobStatusToJP(p.status)}</td>
-              <td className="text-xs">{p.uraian}</td>
+              <td className="text-xs">{data.translations?.[`pekerjaan_${idx}_uraian`] || p.uraian}</td>
             </tr>
           ))}
           {(!data.pekerjaan || data.pekerjaan.filter((p) => p.perusahaan).length === 0) && (
