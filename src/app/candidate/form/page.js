@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { db } from "@/lib/firebase";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import Navbar from "@/components/Navbar";
+import UploadField from "@/components/UploadField";
 
 const KATEGORI_OPTIONS = ["NEW COMER", "EX-MAGANG/EX-TRAINEER", "ENGINEERING/GIJINKOKU"];
 const BIDANG_OPTIONS_NEW_COMER = ["KAIGO", "PM", "PERTANIAN", "PETERNAKAN", "KONSTRUKSI DOBOKU"];
@@ -148,6 +149,7 @@ export default function CandidateFormPage() {
     transkripNilai: "",
     riwayatRelevan: "",
     // Sertifikat Umum
+    pasPhoto: "",
     sertifikatBahasaJepang: "",
     videoJFT: "",
     sertifikatSSW: "",
@@ -307,8 +309,8 @@ export default function CandidateFormPage() {
           {/* KHUSUS EX-MAGANG: Sertifikat Tambahan */}
           {formData.kategoriKandidat === "EX-MAGANG/EX-TRAINEER" && (
             <FormSection title="Dokumen Khusus Ex-Magang/Ex-Traineer">
-              <InputField label="Sertifikat Senmonkyuu/Hyoukachosho (URL)" name="sertifikatSenmonkyuu" value={formData.sertifikatSenmonkyuu} onChange={handleChange} fullWidth placeholder="Link Google Drive" />
-              <InputField label="Sertifikat Selesai Magang/JITCO (URL)" name="sertifikatSelesaiMagang" value={formData.sertifikatSelesaiMagang} onChange={handleChange} fullWidth placeholder="Link Google Drive" />
+              <UploadField label="Sertifikat Senmonkyuu/Hyoukachosho" name="sertifikatSenmonkyuu" value={formData.sertifikatSenmonkyuu} onChange={handleChange} accept="image/*,application/pdf" userId={user?.uid} fullWidth />
+              <UploadField label="Sertifikat Selesai Magang/JITCO" name="sertifikatSelesaiMagang" value={formData.sertifikatSelesaiMagang} onChange={handleChange} accept="image/*,application/pdf" userId={user?.uid} fullWidth />
               <InputField label="Deskripsi Pekerjaan Magang/TG" name="deskripsiMagang" value={formData.deskripsiMagang} onChange={handleChange} type="textarea" fullWidth />
             </FormSection>
           )}
@@ -445,12 +447,13 @@ export default function CandidateFormPage() {
           </FormSection>
 
           {/* DOKUMEN / SERTIFIKAT */}
-          <FormSection title="Upload Dokumen (Link Google Drive)">
-            <InputField label="Sertifikat Bahasa Jepang JFT/JLPT (URL)" name="sertifikatBahasaJepang" value={formData.sertifikatBahasaJepang} onChange={handleChange} fullWidth placeholder="https://drive.google.com/..." />
-            <InputField label="Video Screen Recording JFT (URL)" name="videoJFT" value={formData.videoJFT} onChange={handleChange} fullWidth placeholder="https://drive.google.com/..." />
-            <InputField label="Sertifikat SSW (URL)" name="sertifikatSSW" value={formData.sertifikatSSW} onChange={handleChange} fullWidth placeholder="https://drive.google.com/..." />
-            <InputField label="Video Screen Recording SSW (URL)" name="videoSSW" value={formData.videoSSW} onChange={handleChange} fullWidth placeholder="https://drive.google.com/..." />
-            <InputField label="CV/Rirekisho (URL)" name="cvRirekisho" value={formData.cvRirekisho} onChange={handleChange} fullWidth placeholder="https://drive.google.com/..." />
+          <FormSection title="Upload Dokumen">
+            <UploadField label="Pas Photo 3x4" name="pasPhoto" value={formData.pasPhoto} onChange={handleChange} accept="image/*" userId={user?.uid} fullWidth />
+            <UploadField label="Sertifikat Bahasa Jepang JFT/JLPT" name="sertifikatBahasaJepang" value={formData.sertifikatBahasaJepang} onChange={handleChange} accept="image/*,application/pdf" userId={user?.uid} fullWidth />
+            <UploadField label="Video Screen Recording JFT" name="videoJFT" value={formData.videoJFT} onChange={handleChange} accept="video/*" userId={user?.uid} fullWidth />
+            <UploadField label="Sertifikat SSW" name="sertifikatSSW" value={formData.sertifikatSSW} onChange={handleChange} accept="image/*,application/pdf" userId={user?.uid} fullWidth />
+            <UploadField label="Video Screen Recording SSW" name="videoSSW" value={formData.videoSSW} onChange={handleChange} accept="video/*" userId={user?.uid} fullWidth />
+            <UploadField label="CV/Rirekisho" name="cvRirekisho" value={formData.cvRirekisho} onChange={handleChange} accept="application/pdf,image/*" userId={user?.uid} fullWidth />
           </FormSection>
 
           <div className="flex justify-end space-x-3 mb-12">

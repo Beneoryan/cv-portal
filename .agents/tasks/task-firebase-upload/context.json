@@ -1,0 +1,22 @@
+{
+  "project_type": "Next.js 15.5.18 app with Firebase backend, Tailwind CSS styling",
+  "language": "JavaScript (React, client components with 'use client')",
+  "build_system": "npm with Next.js CLI",
+  "test_framework": "None found - no test files in the project",
+  "build_command": "npm run build",
+  "test_command": "N/A - no tests configured",
+  "verification_instructions": "Run `npm run build` in /projects/sandbox/cv-portal to verify the project compiles without errors",
+  "snapshot_or_generated_files": null,
+  "setup_instructions": "Dependencies already installed in node_modules. Run `npm run build` to verify.",
+  "environment_constraints": "No test framework. Verification is build-only. Firebase SDK 10.12.0 already includes firebase/storage module.",
+  "contribution_requirements": "No CONTRIBUTING.md found. Follow existing code patterns.",
+  "key_patterns": "- All pages use 'use client' directive for client-side rendering\n- Form components use FormSection wrapper with card styling and InputField for each field\n- Styling uses Tailwind CSS with custom component classes defined in globals.css (btn-primary, input-field, form-label, card)\n- Firebase config in src/lib/firebase.js exports app, auth, db\n- Auth context provides user object with user.uid\n- Form state managed with useState, handleChange pattern\n- Data saved to Firestore via setDoc",
+  "relevant_files": [
+    "src/lib/firebase.js",
+    "src/app/candidate/form/page.js",
+    "src/context/AuthContext.js",
+    "src/styles/globals.css",
+    "src/components/Navbar.js"
+  ],
+  "directory_structure": "src/app/ - Next.js app router pages\nsrc/components/ - Reusable components (Navbar, CVTemplate, etc.)\nsrc/context/ - React context providers (AuthContext)\nsrc/lib/ - Library configs (firebase.js)\nsrc/styles/ - Global CSS"
+}

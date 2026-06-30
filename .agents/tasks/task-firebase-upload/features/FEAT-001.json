@@ -1,0 +1,27 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "Add Firebase Storage export and create UploadField component, then integrate upload fields into the candidate form replacing URL-only inputs with upload+URL combo fields",
+  "status": "in_progress",
+  "steps": [
+    "Step 1: Add Firebase Storage export to src/lib/firebase.js - import getStorage from 'firebase/storage' and export the storage instance alongside app, auth, db",
+    "Step 2: Create src/components/UploadField.js - a reusable upload component that: (a) accepts props: label, name, value, onChange, accept, userId, fullWidth; (b) shows a file input button styled with btn-primary class; (c) on file select, uploads to Firebase Storage at path candidates/{userId}/{name}/{filename} using uploadBytesResumable; (d) shows a progress bar during upload (Tailwind styled); (e) on completion, calls getDownloadURL and sets the value via onChange (simulating an event with e.target.name and e.target.value); (f) has a text input below for manual URL paste as alternative; (g) shows preview: image thumbnail for image/* files, filename text for PDF/video; (h) handles errors gracefully with user-visible error message; (i) supports large files up to 500MB",
+    "Step 3: Modify src/app/candidate/form/page.js - (a) add 'pasPhoto' field to formData initial state (currently missing); (b) import UploadField component; (c) import storage from @/lib/firebase (not needed in page if UploadField handles it); (d) replace the 'Upload Dokumen (Link Google Drive)' FormSection with a new section titled 'Upload Dokumen' that uses UploadField for each document field: pasPhoto (accept: image/*), sertifikatBahasaJepang (accept: image/*,.pdf), videoJFT (accept: video/*), sertifikatSSW (accept: image/*,.pdf), videoSSW (accept: video/*), cvRirekisho (accept: .pdf,image/*); (e) In the Ex-Magang section, replace the sertifikatSenmonkyuu and sertifikatSelesaiMagang InputFields with UploadField components (accept: image/*,.pdf); (f) pass user.uid as userId prop to each UploadField",
+    "Step 4: Verify the build passes with `npm run build`"
+  ],
+  "acceptance_criteria": [
+    "src/lib/firebase.js exports storage in addition to app, auth, db",
+    "src/components/UploadField.js exists and is a complete upload component with progress bar, preview, and manual URL input",
+    "The candidate form page imports and uses UploadField for all 8 document fields (pasPhoto, sertifikatBahasaJepang, videoJFT, sertifikatSSW, videoSSW, cvRirekisho, sertifikatSenmonkyuu, sertifikatSelesaiMagang)",
+    "Each UploadField has correct accept prop matching the file types specified",
+    "Upload path uses candidates/{userId}/{fieldName}/{filename} pattern",
+    "Progress bar is visible during upload",
+    "Manual URL input remains as alternative",
+    "`npm run build` completes without errors"
+  ],
+  "verification": [
+    "Run `npm run build` in /projects/sandbox/cv-portal and confirm it exits with code 0"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

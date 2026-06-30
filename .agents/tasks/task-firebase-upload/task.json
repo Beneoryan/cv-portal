@@ -1,0 +1,7 @@
+{
+  "task_id": "task-firebase-upload",
+  "task_description": "Add Firebase Storage file upload functionality to the candidate form's document section, replacing URL-only inputs with upload buttons that support images, videos, PDFs up to 500MB with progress bars and previews",
+  "status": "in_progress",
+  "feature_order": ["FEAT-001"],
+  "blocked_reason": null
+}
