@@ -51,6 +51,11 @@ function analyzeHeaderMapping(headers) {
     for (const [fieldName, keywords] of Object.entries(fieldDefinitions)) {
       for (const keyword of keywords) {
         const nk = normalizeHeader(keyword);
+        // Exact match priority
+        if (nh === nk) {
+          foundField = fieldName;
+          break;
+        }
         // Exact substring match
         if (nh.includes(nk) || nk.includes(nh)) {
           foundField = fieldName;
@@ -603,6 +608,18 @@ function parseRow(headers, values) {
   // Normalize all headers for better matching
   const normalizedHeaders = headers.map(normalizeHeader);
 
+  // Exact match getter - matches headers EXACTLY (equals, not includes)
+  const getExact = (...headerNames) => {
+    for (const name of headerNames) {
+      const nn = normalizeHeader(name);
+      const idx = normalizedHeaders.findIndex((h) => h === nn);
+      if (idx >= 0 && values[idx] && values[idx].trim()) {
+        return values[idx].trim();
+      }
+    }
+    return "";
+  };
+
   // Smart getter with normalization and fuzzy matching
   const get = (...keywords) => {
     // Phase 1: Exact substring match on normalized headers
@@ -648,7 +665,7 @@ function parseRow(headers, values) {
     kodeReferensi: get("Kode Referensi", "KODE REFERENSI", "REFERENSI"),
     kodeJob: get("Kode Job", "KODE JOB", "KODE PEKERJAAN"),
     kategoriKandidat: normalizeKategori((() => {
-      let rawKategori = get("KATEGORI KANDIDAT", "KANDIDAT", "KATEGORI", "ANDA ADALAH KANDIDAT", "ANDA TERMASUK KANDIDAT", "PILIH KATEGORI", "JENIS KANDIDAT", "STATUS KANDIDAT", "CANDIDATE TYPE", "KATEGORI PESERTA", "TIPE KANDIDAT");
+      let rawKategori = getExact("KATEGORI KANDIDAT") || get("KATEGORI KANDIDAT", "KANDIDAT", "KATEGORI", "ANDA ADALAH KANDIDAT", "ANDA TERMASUK KANDIDAT", "PILIH KATEGORI", "JENIS KANDIDAT", "STATUS KANDIDAT", "CANDIDATE TYPE", "KATEGORI PESERTA", "TIPE KANDIDAT");
 
       // Fallback: find column with "KATEGORI KANDIDAT" header by direct scan
       if (!rawKategori) {
