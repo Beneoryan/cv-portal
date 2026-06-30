@@ -17,11 +17,12 @@
     "The Upload Dokumen section includes a SIM upload field",
     "The alasanKaigofukushishi field does NOT show when kategori is ENGINEERING/GIJINKOKU",
     "The alasanKaigofukushishi field DOES show for NEW COMER and EX-MAGANG/EX-TRAINEER",
-    "The import parseRow normalizes kategoriKandidat to uppercase to ensure EX-MAGANG/EX-TRAINEER and ENGINEERING/GIJINKOKU are properly recognized"
+    "The import parseRow normalizes kategoriKandidat to uppercase to ensure EX-MAGANG/EX-TRAINEER and ENGINEERING/GIJINKOKU are properly recognized",
+    "A normalizeKategori() function maps variant spreadsheet values to exactly one of: NEW COMER, EX-MAGANG/EX-TRAINEER, ENGINEERING/GIJINKOKU"
   ],
   "verification": [
     "Run npm run build to confirm no compilation errors"
   ],
   "blocked_reason": null,
-  "findings": "All changes built successfully with npm run build. No test suite configured. Review fixes applied: (1) handleSubmit now merges bidangKerjaLainnya into bidangKerja when value is LAINNYA before saving to Firestore; (2) handleChange clears bidangKerjaLainnya when bidangKerja switches away from LAINNYA; (3) dokumenSIM stored but not surfaced is acceptable scope per user request; (4) handleChange resets bidangKerja and bidangKerjaLainnya when kategoriKandidat changes."
+  "findings": "All changes built successfully with npm run build. Additional fix in separate commit: (1) Import page now clears bidangKerja to empty string for ENGINEERING/GIJINKOKU to prevent motivational text from showing in Bidang column; (2) Admin edit page expanded with conditional SIM sections (simA/simB/simC with per-type display), ex-magang documents section, engineering documents section, bidangKerjaLainnya, dokumenSIM, conditional health fields (jumlahRokok, namaPenyakit, namaAlergi), and conditional paspor fields (dariKapan, keperluanApa); (3) CV template reverted from landscape (297mm) to portrait (210mm) and @page changed from A4 landscape to A4."
 }
