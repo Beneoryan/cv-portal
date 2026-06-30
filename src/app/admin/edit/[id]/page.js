@@ -174,18 +174,35 @@ export default function EditCandidatePage() {
             <div className="card">
               <h3 className="font-semibold text-gray-700 mb-3">Informasi Referensi & Job</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {[
-                  { key: "kodeReferensi", label: "Kode Referensi" },
-                  { key: "kodeJob", label: "Kode Job" },
-                  { key: "kategoriKandidat", label: "Kategori Kandidat" },
-                  { key: "domisili", label: "Domisili" },
-                  { key: "bidangKerja", label: "Bidang Kerja" },
-                ].map((f) => (
-                  <div key={f.key}>
-                    <label className="form-label">{f.label}</label>
-                    <input className="input-field" value={data[f.key] || ""} onChange={(e) => handleChange(f.key, e.target.value)} />
-                  </div>
-                ))}
+                <div>
+                  <label className="form-label">Kode Referensi</label>
+                  <input className="input-field" value={data.kodeReferensi || ""} onChange={(e) => handleChange("kodeReferensi", e.target.value)} />
+                </div>
+                <div>
+                  <label className="form-label">Kode Job</label>
+                  <input className="input-field" value={data.kodeJob || ""} onChange={(e) => handleChange("kodeJob", e.target.value)} />
+                </div>
+                <div>
+                  <label className="form-label">Kategori Kandidat</label>
+                  <select className="input-field" value={data.kategoriKandidat || ""} onChange={(e) => handleChange("kategoriKandidat", e.target.value)}>
+                    <option value="">-- Pilih --</option>
+                    <option value="NEW COMER">NEW COMER</option>
+                    <option value="EX-MAGANG/EX-TRAINEER">EX-MAGANG/EX-TRAINEER</option>
+                    <option value="ENGINEERING/GIJINKOKU">ENGINEERING/GIJINKOKU</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="form-label">Domisili</label>
+                  <input className="input-field" value={data.domisili || ""} onChange={(e) => handleChange("domisili", e.target.value)} />
+                </div>
+                <div>
+                  <label className="form-label">Bidang Kerja</label>
+                  <input className="input-field" value={data.bidangKerja || ""} onChange={(e) => handleChange("bidangKerja", e.target.value)} />
+                </div>
+                <div>
+                  <label className="form-label">Bidang Kerja Lainnya (Manual)</label>
+                  <input className="input-field" value={data.bidangKerjaLainnya || ""} onChange={(e) => handleChange("bidangKerjaLainnya", e.target.value)} placeholder="Jika bidang kerja LAINNYA" />
+                </div>
               </div>
             </div>
 
@@ -209,75 +226,240 @@ export default function EditCandidatePage() {
                   { key: "dominanTangan", label: "Dominan Tangan" },
                   { key: "butaWarna", label: "Buta Warna" },
                   { key: "merokok", label: "Merokok" },
-                  { key: "minumAlkohol", label: "Minum Alkohol" },
-                  { key: "tato", label: "Tato" },
-                  { key: "hobi", label: "Hobi" },
                 ].map((f) => (
                   <div key={f.key}>
                     <label className="form-label">{f.label}</label>
                     <input className="input-field" value={data[f.key] || ""} onChange={(e) => handleChange(f.key, e.target.value)} />
                   </div>
                 ))}
-                <div className="md:col-span-2">
-                  <label className="form-label">Penyakit Berat</label>
-                  <textarea className="input-field" value={data.penyakitBerat || ""} onChange={(e) => handleChange("penyakitBerat", e.target.value)} />
+                {data.merokok === "YA" && (
+                  <div>
+                    <label className="form-label">Jumlah Rokok/Hari</label>
+                    <input className="input-field" value={data.jumlahRokok || ""} onChange={(e) => handleChange("jumlahRokok", e.target.value)} />
+                  </div>
+                )}
+                <div>
+                  <label className="form-label">Minum Alkohol</label>
+                  <input className="input-field" value={data.minumAlkohol || ""} onChange={(e) => handleChange("minumAlkohol", e.target.value)} />
                 </div>
-                <div className="md:col-span-2">
+                <div>
+                  <label className="form-label">Tato</label>
+                  <input className="input-field" value={data.tato || ""} onChange={(e) => handleChange("tato", e.target.value)} />
+                </div>
+                <div>
+                  <label className="form-label">Penyakit Berat</label>
+                  <input className="input-field" value={data.penyakitBerat || ""} onChange={(e) => handleChange("penyakitBerat", e.target.value)} />
+                </div>
+                {(data.penyakitBerat === "YA") && (
+                  <div>
+                    <label className="form-label">Nama Penyakit</label>
+                    <input className="input-field" value={data.namaPenyakit || ""} onChange={(e) => handleChange("namaPenyakit", e.target.value)} />
+                  </div>
+                )}
+                <div>
                   <label className="form-label">Alergi</label>
-                  <textarea className="input-field" value={data.alergi || ""} onChange={(e) => handleChange("alergi", e.target.value)} />
+                  <input className="input-field" value={data.alergi || ""} onChange={(e) => handleChange("alergi", e.target.value)} />
+                </div>
+                {(data.alergi === "YA") && (
+                  <div>
+                    <label className="form-label">Nama Alergi</label>
+                    <input className="input-field" value={data.namaAlergi || ""} onChange={(e) => handleChange("namaAlergi", e.target.value)} />
+                  </div>
+                )}
+                <div>
+                  <label className="form-label">Hobi</label>
+                  <input className="input-field" value={data.hobi || ""} onChange={(e) => handleChange("hobi", e.target.value)} />
                 </div>
                 <div className="md:col-span-2">
                   <label className="form-label">Alamat</label>
                   <textarea className="input-field" value={data.alamatLengkap || ""} onChange={(e) => handleChange("alamatLengkap", e.target.value)} />
                 </div>
+              </div>
+            </div>
+
+            {/* SIM */}
+            <div className="card">
+              <h3 className="font-semibold text-gray-700 mb-3">SIM (Surat Izin Mengemudi)</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="form-label">Memiliki SIM</label>
-                  <input className="input-field" value={data.memilikiSim || ""} onChange={(e) => handleChange("memilikiSim", e.target.value)} />
-                </div>
-                <div>
-                  <label className="form-label">SIM A</label>
-                  <input className="input-field" value={data.simA || ""} onChange={(e) => handleChange("simA", e.target.value)} />
-                </div>
-                <div>
-                  <label className="form-label">Nomor SIM A</label>
-                  <input className="input-field" value={data.nomorSimA || ""} onChange={(e) => handleChange("nomorSimA", e.target.value)} />
-                </div>
-                <div>
-                  <label className="form-label">SIM B</label>
-                  <input className="input-field" value={data.simB || ""} onChange={(e) => handleChange("simB", e.target.value)} />
-                </div>
-                <div>
-                  <label className="form-label">Nomor SIM B</label>
-                  <input className="input-field" value={data.nomorSimB || ""} onChange={(e) => handleChange("nomorSimB", e.target.value)} />
-                </div>
-                <div>
-                  <label className="form-label">SIM C</label>
-                  <input className="input-field" value={data.simC || ""} onChange={(e) => handleChange("simC", e.target.value)} />
-                </div>
-                <div>
-                  <label className="form-label">Nomor SIM C</label>
-                  <input className="input-field" value={data.nomorSimC || ""} onChange={(e) => handleChange("nomorSimC", e.target.value)} />
+                  <select className="input-field" value={data.memilikiSim || ""} onChange={(e) => handleChange("memilikiSim", e.target.value)}>
+                    <option value="">-- Pilih --</option>
+                    <option value="YA">YA</option>
+                    <option value="TIDAK">TIDAK</option>
+                  </select>
                 </div>
               </div>
+              {data.memilikiSim === "YA" && (
+                <div className="mt-4 space-y-4">
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="form-label">SIM A</label>
+                        <select className="input-field" value={data.simA || ""} onChange={(e) => handleChange("simA", e.target.value)}>
+                          <option value="">-- Pilih --</option>
+                          <option value="YA">YA</option>
+                          <option value="TIDAK">TIDAK</option>
+                        </select>
+                      </div>
+                      {data.simA === "YA" && (
+                        <>
+                          <div>
+                            <label className="form-label">Nomor SIM A</label>
+                            <input className="input-field" value={data.nomorSimA || ""} onChange={(e) => handleChange("nomorSimA", e.target.value)} />
+                          </div>
+                          <div>
+                            <label className="form-label">Dokumen SIM A (URL)</label>
+                            <input className="input-field text-xs" value={data.dokumenSimA || ""} onChange={(e) => handleChange("dokumenSimA", e.target.value)} placeholder="https://..." />
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="form-label">SIM B</label>
+                        <select className="input-field" value={data.simB || ""} onChange={(e) => handleChange("simB", e.target.value)}>
+                          <option value="">-- Pilih --</option>
+                          <option value="YA">YA</option>
+                          <option value="TIDAK">TIDAK</option>
+                        </select>
+                      </div>
+                      {data.simB === "YA" && (
+                        <>
+                          <div>
+                            <label className="form-label">Nomor SIM B</label>
+                            <input className="input-field" value={data.nomorSimB || ""} onChange={(e) => handleChange("nomorSimB", e.target.value)} />
+                          </div>
+                          <div>
+                            <label className="form-label">Dokumen SIM B (URL)</label>
+                            <input className="input-field text-xs" value={data.dokumenSimB || ""} onChange={(e) => handleChange("dokumenSimB", e.target.value)} placeholder="https://..." />
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="form-label">SIM C</label>
+                        <select className="input-field" value={data.simC || ""} onChange={(e) => handleChange("simC", e.target.value)}>
+                          <option value="">-- Pilih --</option>
+                          <option value="YA">YA</option>
+                          <option value="TIDAK">TIDAK</option>
+                        </select>
+                      </div>
+                      {data.simC === "YA" && (
+                        <>
+                          <div>
+                            <label className="form-label">Nomor SIM C</label>
+                            <input className="input-field" value={data.nomorSimC || ""} onChange={(e) => handleChange("nomorSimC", e.target.value)} />
+                          </div>
+                          <div>
+                            <label className="form-label">Dokumen SIM C (URL)</label>
+                            <input className="input-field text-xs" value={data.dokumenSimC || ""} onChange={(e) => handleChange("dokumenSimC", e.target.value)} placeholder="https://..." />
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Paspor */}
             <div className="card">
               <h3 className="font-semibold text-gray-700 mb-3">Paspor & Pengalaman Jepang</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {[
-                  { key: "pernahKeJepang", label: "Pernah ke Jepang" },
-                  { key: "memilikiPaspor", label: "Memiliki Paspor" },
-                  { key: "nomorPaspor", label: "Nomor Paspor" },
-                  { key: "masaBerlakuPaspor", label: "Masa Berlaku Paspor" },
-                ].map((f) => (
-                  <div key={f.key}>
-                    <label className="form-label">{f.label}</label>
-                    <input className="input-field" value={data[f.key] || ""} onChange={(e) => handleChange(f.key, e.target.value)} />
-                  </div>
-                ))}
+                <div>
+                  <label className="form-label">Pernah ke Jepang</label>
+                  <select className="input-field" value={data.pernahKeJepang || ""} onChange={(e) => handleChange("pernahKeJepang", e.target.value)}>
+                    <option value="">-- Pilih --</option>
+                    <option value="YA">YA</option>
+                    <option value="TIDAK">TIDAK</option>
+                  </select>
+                </div>
+                {data.pernahKeJepang === "YA" && (
+                  <>
+                    <div>
+                      <label className="form-label">Dari Kapan?</label>
+                      <input className="input-field" value={data.dariKapan || ""} onChange={(e) => handleChange("dariKapan", e.target.value)} />
+                    </div>
+                    <div>
+                      <label className="form-label">Atas Keperluan Apa?</label>
+                      <input className="input-field" value={data.keperluanApa || ""} onChange={(e) => handleChange("keperluanApa", e.target.value)} />
+                    </div>
+                  </>
+                )}
+                <div>
+                  <label className="form-label">Memiliki Paspor</label>
+                  <select className="input-field" value={data.memilikiPaspor || ""} onChange={(e) => handleChange("memilikiPaspor", e.target.value)}>
+                    <option value="">-- Pilih --</option>
+                    <option value="YA">YA</option>
+                    <option value="TIDAK">TIDAK</option>
+                  </select>
+                </div>
+                {data.memilikiPaspor === "YA" && (
+                  <>
+                    <div>
+                      <label className="form-label">Nomor Paspor</label>
+                      <input className="input-field" value={data.nomorPaspor || ""} onChange={(e) => handleChange("nomorPaspor", e.target.value)} />
+                    </div>
+                    <div>
+                      <label className="form-label">Masa Berlaku Paspor</label>
+                      <input className="input-field" type="date" value={data.masaBerlakuPaspor || ""} onChange={(e) => handleChange("masaBerlakuPaspor", e.target.value)} />
+                    </div>
+                  </>
+                )}
               </div>
             </div>
+
+            {/* Dokumen Khusus Ex-Magang */}
+            {data.kategoriKandidat === "EX-MAGANG/EX-TRAINEER" && (
+              <div className="card">
+                <h3 className="font-semibold text-gray-700 mb-3">Dokumen Khusus Ex-Magang/Ex-Traineer</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="form-label">Sertifikat Senmonkyuu/Hyoukachosho (URL)</label>
+                    <input className="input-field text-xs" value={data.sertifikatSenmonkyuu || ""} onChange={(e) => handleChange("sertifikatSenmonkyuu", e.target.value)} placeholder="https://..." />
+                  </div>
+                  <div>
+                    <label className="form-label">Sertifikat Selesai Magang/JITCO (URL)</label>
+                    <input className="input-field text-xs" value={data.sertifikatSelesaiMagang || ""} onChange={(e) => handleChange("sertifikatSelesaiMagang", e.target.value)} placeholder="https://..." />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="form-label">Deskripsi Pekerjaan Magang/TG</label>
+                    <textarea className="input-field min-h-[80px]" value={data.deskripsiMagang || ""} onChange={(e) => handleChange("deskripsiMagang", e.target.value)} />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Dokumen Khusus Engineering */}
+            {data.kategoriKandidat === "ENGINEERING/GIJINKOKU" && (
+              <div className="card">
+                <h3 className="font-semibold text-gray-700 mb-3">Dokumen Khusus Engineering/Gijinkoku</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="form-label">Jurusan D3/S1</label>
+                    <input className="input-field" value={data.jurusanUniv || ""} onChange={(e) => handleChange("jurusanUniv", e.target.value)} />
+                  </div>
+                  <div>
+                    <label className="form-label">Scan Ijazah (URL)</label>
+                    <input className="input-field text-xs" value={data.scanIjazah || ""} onChange={(e) => handleChange("scanIjazah", e.target.value)} placeholder="https://..." />
+                  </div>
+                  <div>
+                    <label className="form-label">Transkrip Nilai D3/S1 (URL)</label>
+                    <input className="input-field text-xs" value={data.transkripNilai || ""} onChange={(e) => handleChange("transkripNilai", e.target.value)} placeholder="https://..." />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="form-label">Riwayat Pekerjaan yang Relevan</label>
+                    <textarea className="input-field min-h-[80px]" value={data.riwayatRelevan || ""} onChange={(e) => handleChange("riwayatRelevan", e.target.value)} />
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Data Keluarga */}
             <div className="card">
@@ -470,6 +652,7 @@ export default function EditCandidatePage() {
                   { key: "cvRirekisho", label: "CV/Rirekisho (URL)" },
                   { key: "sertifikatSenmonkyuu", label: "Sertifikat Senmonkyuu (URL)" },
                   { key: "sertifikatSelesaiMagang", label: "Sertifikat Selesai Magang (URL)" },
+                  { key: "dokumenSIM", label: "Dokumen SIM (URL)" },
                 ].map((f) => (
                   <div key={f.key}>
                     <label className="form-label">{f.label}</label>
@@ -483,7 +666,11 @@ export default function EditCandidatePage() {
             <div className="card">
               <h3 className="font-semibold text-gray-700 mb-3">Motivasi & Kelebihan (Indonesia)</h3>
               <div className="space-y-4">
-                {TRANSLATABLE_FIELDS.map((f) => (
+                {TRANSLATABLE_FIELDS.filter((f) => {
+                  // Hide alasanKaigofukushishi for ENGINEERING/GIJINKOKU
+                  if (f.key === "alasanKaigofukushishi" && data.kategoriKandidat === "ENGINEERING/GIJINKOKU") return false;
+                  return true;
+                }).map((f) => (
                   <div key={f.key}>
                     <label className="form-label">{f.label}</label>
                     <textarea className="input-field min-h-[80px]" value={data[f.key] || ""} onChange={(e) => handleChange(f.key, e.target.value)} />

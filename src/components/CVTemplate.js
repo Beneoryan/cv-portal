@@ -20,7 +20,7 @@ export default function CVTemplate({ data }) {
   const photoUrl = getDriveImageUrl(data.pasPhoto);
 
   return (
-    <div className="cv-container bg-white p-6 max-w-[297mm] mx-auto" id="cv-print-area">
+    <div className="cv-container bg-white p-6 max-w-[210mm] mx-auto" id="cv-print-area">
       {/* Header */}
       <h2 className="text-center text-lg font-bold mb-4 border-b-2 border-black pb-2">
         履歴書 (CV)

@@ -923,6 +923,11 @@ function parseRow(headers, values) {
     }
   }
 
+  // 3.5. Clear bidangKerja for ENGINEERING/GIJINKOKU (no bidang data exists for engineering candidates)
+  if (result.kategoriKandidat === "ENGINEERING/GIJINKOKU") {
+    result.bidangKerja = "";
+  }
+
   // 4. Emergency contact: if nomorDarurat contains combined data (multiple contacts stacked), parse it
   // Format could be: "nama - no hp - hubungan\nnama2 - no hp2 - hubungan2" or all in one field
   if (result.nomorDarurat && looksLikeCombinedData(result.nomorDarurat)) {
