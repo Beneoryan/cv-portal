@@ -1,8 +1,14 @@
 {
   "task_id": "task-sim-section-redesign",
   "task_description": "Redesign SIM section in candidate form to show separate rows for SIM A, SIM B, SIM C with individual checkboxes, nomor, and upload fields",
-  "status": "in_progress",
+  "status": "completed",
   "feature_order": ["FEAT-001"],
   "blocked_reason": null,
-  "verification": null
+  "verification": {
+    "build": "pass",
+    "tests": "skipped",
+    "test_quality": "skipped",
+    "docker_build": "skipped",
+    "summary": "npm run build passes with no errors. All pages compile successfully. No test suite configured."
+  }
 }
